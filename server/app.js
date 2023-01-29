@@ -6,6 +6,8 @@ const port = 3000;
 
 const pth = path.join(path.dirname(__dirname), "client");
 app.use(express.static(path.join(pth)));
+app.use(express.json());
+
 app.use("/api", apiRouter);
 
 app.get("*", (req, res) => {

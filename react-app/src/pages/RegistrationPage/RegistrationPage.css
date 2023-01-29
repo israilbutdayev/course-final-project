@@ -1,0 +1,6 @@
+form#registration > div {
+  display: flex;
+  justify-content: space-between;
+  margin-left: 10px;
+  margin-right: 75%;
+}

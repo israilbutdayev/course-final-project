@@ -1,15 +1,15 @@
 import React from "react";
 import { useSelector } from "react-redux";
-import { getAllProducts } from "../../redux/store";
+import { getAllProductsThunk } from "../../redux/store";
 import store from "../../redux/store";
 import Product from "../Product/Product";
 import "./Products.css";
 import { useState } from "react";
 import { useMemo } from "react";
-store.dispatch(getAllProducts);
+store.dispatch(getAllProductsThunk);
 
 export default function Products() {
-  const products = useSelector((state) => state);
+  const products = useSelector((state) => state.product);
   const [count, setCount] = useState(10);
   const [page, setPage] = useState(1);
   const pages = useMemo(() => {
@@ -36,6 +36,7 @@ export default function Products() {
     <div>
       <div id="pagination">
         <div id="page">
+          <span>Səhifə</span>
           <select onChange={pageHandler} value={`${page}`}>
             {[...Array(pages).keys()].map((i) => (
               <option key={i} value={i + 1}>
@@ -45,6 +46,7 @@ export default function Products() {
           </select>
         </div>
         <div id="count">
+          <span>Məhsulların sayı</span>
           <select name="count" id="count" onChange={countHandler} value={count}>
             <option value="5">5</option>
             <option value="10">10</option>
