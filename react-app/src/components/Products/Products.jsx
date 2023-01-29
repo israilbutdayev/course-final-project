@@ -23,6 +23,10 @@ export default function Products() {
       .slice(startIndex, endIndex);
   }, [count, page, products]);
   const countHandler = (e) => {
+    const previous = count;
+    const next = Number(e.target.value);
+    const result = Math.ceil((previous * (page - 1) + 1) / next);
+    setPage(result);
     setCount(Number(e.target.value));
   };
   const pageHandler = (e) => {
