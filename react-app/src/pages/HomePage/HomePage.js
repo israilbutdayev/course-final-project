@@ -1,5 +1,6 @@
 import React from "react";
+import Products from "../../components/Products/Products";
 
 export default function HomePage() {
-  return <p>Home Page</p>;
+  return <Products />;
 }
