@@ -31,8 +31,11 @@ export const registrationThunk = (jsonData) => async (dispatch, getState) => {
   });
 };
 
-export const loginThunk = async (dispatch, getState) => {
-  await axios.post("/api/login", null);
+export const loginThunk = (jsonData) => async (dispatch, getState) => {
+  const data = jsonData;
+  await axios.post("/api/login", data, {
+    headers: { "Content-Type": "application/json" },
+  });
   dispatch(userSlice.actions.login());
 };
 

@@ -1,16 +1,62 @@
 import React from "react";
+import { useRef } from "react";
 import { useDispatch } from "react-redux";
 import { loginThunk } from "../../redux/store";
 
 export default function LoginPage() {
   const dispatch = useDispatch();
+  const formRef = useRef(null);
   const loginHandler = (e) => {
     e.preventDefault();
-    dispatch(loginThunk);
+    let cancel = false;
+    const formData = new FormData(formRef.current);
+    const jsonData = Object.fromEntries(formData.entries());
+    ["email", "password"].forEach((prop) => {
+      if (jsonData[prop]) {
+        document.querySelector(
+          `form#login > div#${prop} > span#warning`
+        ).style.display = "none";
+      } else {
+        document.querySelector(
+          `form#login > div#${prop} > span#warning`
+        ).style.display = "inline";
+        cancel = true;
+      }
+    });
+    if (!cancel) {
+      dispatch(loginThunk(jsonData));
+    }
   };
   return (
-    <div>
-      <button onClick={loginHandler}>Login</button>
-    </div>
+    <form action="POST" id="login" ref={formRef}>
+      <div id="email">
+        <label htmlFor="email">Email:</label>
+        <br />
+        <input
+          type="email"
+          name="email"
+          id="email"
+          required
+          placeholder="emailinizi daxil edin."
+        />
+        <span id="warning">Zəhmət olmasa emailinizi daxil edin.</span>
+      </div>
+      <div id="password">
+        <label htmlFor="password">Şifrə:</label>
+        <br />
+        <input
+          type="password"
+          name="password"
+          id="password"
+          required
+          placeholder="şifrənizi daxil edin."
+        />
+        <span id="warning">Zəhmət olmasa şifrənizi daxil edin.</span>
+      </div>
+      <br />
+      <button type="submit" onClick={loginHandler}>
+        Daxil ol
+      </button>
+    </form>
   );
 }

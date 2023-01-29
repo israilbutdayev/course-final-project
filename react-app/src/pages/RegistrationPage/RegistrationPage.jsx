@@ -5,7 +5,7 @@ import { registrationThunk } from "../../redux/store";
 import "./RegistrationPage.css";
 
 function RegistrationPage() {
-  const formRef = useRef();
+  const formRef = useRef(null);
   const dispatch = useDispatch();
   const submitHandler = (e) => {
     e.preventDefault();
