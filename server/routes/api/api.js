@@ -3,6 +3,7 @@ const products = require("./products.json");
 const router = express.Router();
 const mysql = require("mysql");
 const bcrypt = require("bcrypt");
+const e = require("express");
 
 const connection = mysql.createConnection({
   host: "localhost",
@@ -21,32 +22,61 @@ router.get("/products", (req, res) => {
 router.get("/product/:id", (req, res) => {});
 
 router.post("/registration", (req, res) => {
-  console.log(req.body);
-  connection.query(
-    "SELECT * FROM users WHERE EMAIL=?",
-    ["israilbutdayev@gmail.com"],
-    (err, rows, fields) => {
-      // console.log(err);
-      // console.log(rows);
-      // console.log(fields);
-      // if (!rows.length) {
-      //   connection.query(
-      //     "SELECT * FROM users WHERE EMAIL=?",
-      //     [],
-      //     (err, rows, fields) => {
-      //       console.log(err);
-      //       console.log(rows);
-      //       if (err) {
-      //         throw err;
-      //       } else {
-      //         res.send("ok");
-      //       }
-      //     }
-      //   );
-      // }
+  const jsonData = req.body;
+  let cancel = false;
+  ["firstName", "lastName", "email", "password"].forEach((prop) => {
+    if (!jsonData[prop]) {
+      cancel = true;
     }
-  );
-  res.send("ok");
+  });
+  if (cancel) {
+    res.json({
+      success: false,
+      error: true,
+      message: "Bütün xanalar daxil edilməyib.",
+    });
+  } else {
+    const { firstName, lastName, email, password } = jsonData;
+    const saltRounds = 10;
+    const salt = bcrypt.genSaltSync(saltRounds);
+    const hash = bcrypt.hashSync(password, salt);
+    connection.query(
+      "SELECT * FROM users WHERE EMAIL=?",
+      [email],
+      (err, rows, fields) => {
+        if (rows.length) {
+          let dbPassword = rows[0].PASSWORD;
+          let checkPassword = bcrypt.compareSync(password, dbPassword);
+          if (checkPassword) {
+            res.json({
+              success: true,
+              error: false,
+              message: "Sistemə uğurla daxil olundu.",
+            });
+          } else {
+            res.json({
+              success: false,
+              error: true,
+              message: "Bu email artıq qeydiyyatdan keçib.",
+            });
+          }
+        } else {
+          let command = `INSERT INTO users (FIRSTNAME, LASTNAME, EMAIL, PASSWORD) VALUES ("${firstName}","${lastName}","${email}","${hash}")`;
+          connection.query(command, (err, rows, fields) => {
+            if (rows.affectedRows && !err) {
+              res.json({
+                success: true,
+                error: false,
+                message: "İstifadəçi uğurla qeydiyyatdan keçdi.",
+              });
+            } else {
+              res.json({ success: false, error: true, message: err });
+            }
+          });
+        }
+      }
+    );
+  }
 });
 
 router.post("/login", (req, res) => {
