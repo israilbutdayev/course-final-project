@@ -1,9 +1,12 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { useRef } from "react";
-import { useDispatch } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { loginThunk } from "../../redux/store";
 
 export default function LoginPage() {
+  const { isLogged } = useSelector((state) => state.credentials);
+  const navigate = useNavigate();
   const dispatch = useDispatch();
   const formRef = useRef(null);
   const loginHandler = (e) => {
@@ -27,6 +30,9 @@ export default function LoginPage() {
       dispatch(loginThunk(jsonData));
     }
   };
+  if (isLogged) {
+    navigate("/", { replace: true });
+  }
   return (
     <form action="POST" id="login" ref={formRef}>
       <div id="email">

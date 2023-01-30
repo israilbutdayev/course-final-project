@@ -1,29 +1,27 @@
 import React from "react";
+import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
-import { logoutThunk } from "../../redux/store";
+import { loginThunk } from "../../redux/store";
 import "./NavBar.css";
 
 export default function NavBar() {
-  const user = useSelector((state) => state.user);
+  const { isLogged, firstName, lastName } = useSelector(
+    (state) => state.credentials
+  );
   const dispatch = useDispatch();
-  const { isLogged, isGuest } = user;
-  const logoutHandler = (e) => {
-    e.preventDefault();
-    dispatch(logoutThunk);
-  };
+  useEffect(() => {
+    dispatch(loginThunk({}));
+  }, [dispatch]);
   return (
     <nav id="navbar">
       <Link to="/">Ana səhifə</Link>
       <Link to="/search/">Ətraflı axtarış</Link>
       <Link to="/about">Haqqında</Link>
-      {isLogged && (
-        <Link to="/logout" onClick={logoutHandler}>
-          Log out
-        </Link>
-      )}
-      {isGuest && <Link to="/login">Daxil ol</Link>}
-      {isGuest && <Link to="/registration">Qeydiyyat</Link>}
+      <Link to="/cart">Kart</Link>
+      {!isLogged && <Link to="/login">Daxil ol</Link>}
+      {!isLogged && <Link to="/registration">Qeydiyyat</Link>}
+      {isLogged && <Link to="/profile">{`${firstName} ${lastName}`}</Link>}
     </nav>
   );
 }

@@ -1,10 +1,13 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { useRef } from "react";
-import { useDispatch } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { registrationThunk } from "../../redux/store";
 import "./RegistrationPage.css";
 
 function RegistrationPage() {
+  const { isLogged } = useSelector((state) => state.credentials);
+  const navigate = useNavigate();
   const formRef = useRef(null);
   const dispatch = useDispatch();
   const submitHandler = (e) => {
@@ -28,6 +31,9 @@ function RegistrationPage() {
       dispatch(registrationThunk(jsonData));
     }
   };
+  if (isLogged) {
+    navigate("/", { replace: true });
+  }
   return (
     <form action="POST" id="registration" ref={formRef}>
       <div id="firstName">

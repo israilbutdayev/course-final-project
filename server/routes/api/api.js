@@ -3,7 +3,7 @@ const products = require("./products.json");
 const router = express.Router();
 const mysql = require("mysql");
 const bcrypt = require("bcrypt");
-const e = require("express");
+const crypto = require("crypto");
 
 const connection = mysql.createConnection({
   host: "localhost",
@@ -61,13 +61,15 @@ router.post("/registration", (req, res) => {
           const saltRounds = 10;
           const salt = bcrypt.genSaltSync(saltRounds);
           const hash = bcrypt.hashSync(password, salt);
-          let command = `INSERT INTO users (FIRSTNAME, LASTNAME, EMAIL, PASSWORD) VALUES ("${firstName}","${lastName}","${email}","${hash}")`;
+          const token = crypto.randomBytes(20).toString("hex");
+          let command = `INSERT INTO users (FIRSTNAME, LASTNAME, EMAIL, PASSWORD, TOKEN) VALUES ("${firstName}","${lastName}","${email}","${hash}", "${token}")`;
           connection.query(command, (err, rows, fields) => {
             if (rows.affectedRows && !err) {
-              res.json({
+              res.cookie("token", token, { maxAge: null }).json({
                 success: true,
                 error: false,
                 message: "İstifadəçi uğurla qeydiyyatdan keçdi.",
+                token: token,
               });
             } else {
               res.json({ success: false, error: true, message: err });
@@ -80,55 +82,87 @@ router.post("/registration", (req, res) => {
 });
 
 router.post("/login", (req, res) => {
-  const jsonData = req.body;
-  let cancel = false;
-  ["email", "password"].forEach((prop) => {
-    if (!jsonData[prop]) {
-      cancel = true;
-    }
-  });
-  if (cancel) {
-    res.json({
-      success: false,
-      error: true,
-      message: "Məlumatlar tam daxil edilməyib.",
-    });
-  } else {
-    const { email, password } = jsonData;
+  if (req.headers.cookie) {
+    const token = req.headers.cookie.split("=")[1];
     connection.query(
-      "SELECT * FROM users WHERE EMAIL=?",
-      [email],
+      "SELECT * FROM users WHERE TOKEN=?",
+      [token],
       (err, rows, fields) => {
-        if (rows.length && !err) {
-          let dbPassword = rows[0].PASSWORD;
-          let checkPassword = bcrypt.compareSync(password, dbPassword);
-          if (checkPassword) {
-            res.json({
-              success: true,
-              error: false,
-              message: "Sistemə uğurla daxil olundu.",
-            });
-          } else {
-            res.json({
-              success: false,
-              error: true,
-              message: "Daxil edilən şifrə yanlışdır.",
-            });
-          }
-        } else {
+        if (rows.length) {
           res.json({
-            success: false,
-            error: true,
-            message: "Belə bir email qeydiyyatdan keçməyib.",
+            success: true,
+            error: false,
+            message: "Giriş uğurlu oldu.",
+            data: {
+              firstName: rows[0].FIRSTNAME,
+              lastName: rows[0].LASTNAME,
+              token: token,
+            },
           });
         }
       }
     );
+  } else {
+    const jsonData = req.body;
+    let cancel = false;
+    ["email", "password"].forEach((prop) => {
+      if (!jsonData[prop]) {
+        cancel = true;
+      }
+    });
+    if (cancel) {
+      res.json({
+        success: false,
+        error: true,
+        message: "Məlumatlar tam daxil edilməyib.",
+      });
+    } else {
+      const { email, password } = jsonData;
+      connection.query(
+        "SELECT * FROM users WHERE EMAIL=?",
+        [email],
+        (err, rows, fields) => {
+          if (rows.length && !err) {
+            let dbPassword = rows[0].PASSWORD;
+            let checkPassword = bcrypt.compareSync(password, dbPassword);
+            if (checkPassword) {
+              const token = rows[0].TOKEN;
+              res.cookie("token", token).json({
+                success: true,
+                error: false,
+                message: "Giriş uğurlu oldu.",
+                data: {
+                  firstName: rows[0].FIRSTNAME,
+                  lastName: rows[0].LASTNAME,
+                  token: token,
+                },
+              });
+            } else {
+              res.json({
+                success: false,
+                error: true,
+                message: "Daxil edilən şifrə yanlışdır.",
+              });
+            }
+          } else {
+            res.json({
+              success: false,
+              error: true,
+              message: "Belə bir email qeydiyyatdan keçməyib.",
+            });
+          }
+        }
+      );
+    }
   }
 });
 
 router.post("/logout", (req, res) => {
-  res.send("ok");
+  res.cookie("token", undefined, { maxAge: 1 }).json({
+    success: true,
+    error: false,
+    message: "Sistemdən uğurla çıxıldı.",
+  });
 });
 
 module.exports = router;

@@ -9,39 +9,46 @@ const productsSlice = createSlice({
     },
   },
 });
-const userSlice = createSlice({
-  name: "user",
-  initialState: { isLogged: false, isGuest: true },
+
+const credentialsSlice = createSlice({
+  name: "credentials",
+  initialState: { isLogged: false, firstName: "", lastName: "", token: "" },
   reducers: {
-    login(state, action) {
-      state.isLogged = true;
-      state.isGuest = false;
-    },
-    logout(state, action) {
-      state.isLogged = false;
-      state.isGuest = true;
+    set(state, action) {
+      return { isLogged: true, ...action.payload };
     },
   },
 });
 
 export const registrationThunk = (jsonData) => async (dispatch, getState) => {
   const data = jsonData;
-  await axios.post("/api/registration", data, {
-    headers: { "Content-Type": "application/json" },
-  });
+  const response = await (
+    await axios.post("/api/registration", data, {
+      headers: { "Content-Type": "application/json" },
+    })
+  ).data;
+  if (response.success) {
+    dispatch(credentialsSlice.actions.set(response.data));
+  }
 };
 
 export const loginThunk = (jsonData) => async (dispatch, getState) => {
   const data = jsonData;
-  await axios.post("/api/login", data, {
-    headers: { "Content-Type": "application/json" },
-  });
-  dispatch(userSlice.actions.login());
+  const response = await (
+    await axios.post("/api/login", data, {
+      headers: { "Content-Type": "application/json" },
+    })
+  ).data;
+  if (response.success) {
+    dispatch(credentialsSlice.actions.set(response.data));
+  }
 };
 
 export const logoutThunk = async (dispatch, getState) => {
-  await axios.post("/api/logout", null);
-  dispatch(userSlice.actions.logout());
+  const response = await (await axios.post("/api/logout", null)).data;
+  if (response.success) {
+    dispatch(credentialsSlice.actions.set({ isLogged: false }));
+  }
 };
 export const getAllProductsThunk = async (dispatch, getState) => {
   const response = await (await axios.get("/api/products")).data;
@@ -50,7 +57,10 @@ export const getAllProductsThunk = async (dispatch, getState) => {
 };
 
 const store = configureStore({
-  reducer: { product: productsSlice.reducer, user: userSlice.reducer },
+  reducer: {
+    product: productsSlice.reducer,
+    credentials: credentialsSlice.reducer,
+  },
 });
 
 export default store;

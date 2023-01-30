@@ -13,6 +13,8 @@ import AboutPage from "../../pages/AboutPage/AboutPage";
 import SearchPage from "../../pages/SearchPage/SearchPage";
 import RegistrationPage from "../../pages/RegistrationPage/RegistrationPage";
 import LoginPage from "../../pages/LoginPage/LoginPage";
+import Profile from "../../pages/ProfilePage/ProfilePage";
+import Cart from "../../pages/CartPage/CartPage";
 const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path="/" element={<RootLayout />}>
@@ -20,8 +22,10 @@ const router = createBrowserRouter(
       <Route path="/product/:id" element={<ProductPage />} />
       <Route path="/search/" element={<SearchPage />} />
       <Route path="/about" element={<AboutPage />} />
+      <Route path="/cart" element={<Cart />} />
       <Route path="/registration" element={<RegistrationPage />} />
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/profile" element={<Profile />} />
     </Route>
   )
 );
