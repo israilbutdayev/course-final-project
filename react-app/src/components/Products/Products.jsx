@@ -1,17 +1,18 @@
 import React from "react";
 import { useSelector } from "react-redux";
-import { getAllProductsThunk } from "../../redux/store";
+import { getProductsThunk } from "../../redux/store";
 import store from "../../redux/store";
 import Product from "../Product/Product";
 import "./Products.css";
 import { useState } from "react";
 import { useMemo } from "react";
-store.dispatch(getAllProductsThunk);
+store.dispatch(getProductsThunk());
 
 export default function Products() {
   const products = useSelector((state) => state.product);
   const [count, setCount] = useState(10);
   const [page, setPage] = useState(1);
+  const [search, setSearch] = useState();
   const pages = useMemo(() => {
     return Math.ceil(products.products.length / count);
   }, [count, products.products.length]);
@@ -32,6 +33,9 @@ export default function Products() {
   const pageHandler = (e) => {
     setPage(Number(e.target.value));
   };
+  function searchHandler(e) {
+    e.preventDefault();
+  }
   return (
     <div>
       <div id="pagination">
@@ -53,6 +57,16 @@ export default function Products() {
             <option value="50">50</option>
             <option value="100">100</option>
           </select>
+        </div>
+        <div>
+          <input
+            id="search"
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+            }}
+          />
+          <button onClick={searchHandler}>Axtar</button>
         </div>
       </div>
       <div id="products">

@@ -1,13 +1,14 @@
 const express = require("express");
 const path = require("path");
 const apiRouter = require("./routes/api/api");
+const cookieParser = require("cookie-parser");
 const app = express();
 const port = 3000;
 
 const pth = path.join(path.dirname(__dirname), "client");
 app.use(express.static(path.join(pth)));
 app.use(express.json());
-
+app.use(cookieParser());
 app.use("/api", apiRouter);
 
 app.get("*", (req, res) => {

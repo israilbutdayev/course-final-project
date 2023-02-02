@@ -1,41 +1,34 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { registrationThunk } from "../../redux/store";
+import { registrationSlice, registrationThunk } from "../../redux/store";
 import "./RegistrationPage.css";
+import { useEffect } from "react";
 
 function RegistrationPage() {
   const { isLogged } = useSelector((state) => state.credentials);
+  const { firstName, lastName, email, password } = useSelector(
+    (state) => state.registration
+  );
   const navigate = useNavigate();
-  const formRef = useRef(null);
   const dispatch = useDispatch();
+  useEffect(() => {
+    if (isLogged) {
+      navigate("/", { replace: true });
+    }
+  }, [isLogged, navigate]);
+  function changeHandler(e) {
+    e.preventDefault();
+    const prop = e.target.id;
+    dispatch(registrationSlice.actions.set({ [prop]: e.target.value }));
+  }
   const submitHandler = (e) => {
     e.preventDefault();
-    let cancel = false;
-    const formData = new FormData(formRef.current);
-    const jsonData = Object.fromEntries(formData.entries());
-    ["firstName", "lastName", "email", "password"].forEach((prop) => {
-      if (jsonData[prop]) {
-        document.querySelector(
-          `form#registration > div#${prop} > span#warning`
-        ).style.display = "none";
-      } else {
-        document.querySelector(
-          `form#registration > div#${prop} > span#warning`
-        ).style.display = "inline";
-        cancel = true;
-      }
-    });
-    if (!cancel) {
-      dispatch(registrationThunk(jsonData));
-    }
+    dispatch(registrationThunk);
   };
-  if (isLogged) {
-    navigate("/", { replace: true });
-  }
+
   return (
-    <form action="POST" id="registration" ref={formRef}>
+    <form action="POST" id="registration">
       <div id="firstName">
         <label htmlFor="firstName">Ad:</label>
         <br />
@@ -45,8 +38,12 @@ function RegistrationPage() {
           id="firstName"
           required
           placeholder="Adınızı daxil edin."
+          value={firstName}
+          onChange={changeHandler}
         />
-        <span id="warning">Zəhmət olmasa adınızı daxil edin.</span>
+        {!firstName.length && (
+          <span id="warning">Zəhmət olmasa adınızı daxil edin.</span>
+        )}
       </div>
       <div id="lastName">
         <label htmlFor="lastName">Soyad:</label>
@@ -57,8 +54,12 @@ function RegistrationPage() {
           id="lastName"
           required
           placeholder="Soyadınızı daxil edin."
+          value={lastName}
+          onChange={changeHandler}
         />
-        <span id="warning">Zəhmət olmasa soyadınızı daxil edin.</span>
+        {!lastName.length && (
+          <span id="warning">Zəhmət olmasa soyadınızı daxil edin.</span>
+        )}
       </div>
       <div id="email">
         <label htmlFor="email">Email:</label>
@@ -69,8 +70,12 @@ function RegistrationPage() {
           id="email"
           required
           placeholder="emailinizi daxil edin."
+          value={email}
+          onChange={changeHandler}
         />
-        <span id="warning">Zəhmət olmasa emailinizi daxil edin.</span>
+        {!email.length && (
+          <span id="warning">Zəhmət olmasa emailinizi daxil edin.</span>
+        )}
       </div>
       <div id="password">
         <label htmlFor="password">Şifrə:</label>
@@ -81,8 +86,12 @@ function RegistrationPage() {
           id="password"
           required
           placeholder="şifrənizi daxil edin."
+          value={password}
+          onChange={changeHandler}
         />
-        <span id="warning">Zəhmət olmasa şifrənizi daxil edin.</span>
+        {!password.length && (
+          <span id="warning">Zəhmət olmasa şifrənizi daxil edin.</span>
+        )}
       </div>
       <br />
       <button type="submit" onClick={submitHandler}>

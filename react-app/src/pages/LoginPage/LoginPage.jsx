@@ -1,40 +1,33 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { loginThunk } from "../../redux/store";
+import { useEffect } from "react";
+import { loginSlice } from "../../redux/store";
+import "./LoginPage.css";
 
 export default function LoginPage() {
   const { isLogged } = useSelector((state) => state.credentials);
+  const { email, password } = useSelector((state) => state.login);
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const formRef = useRef(null);
+  function changeHandler(e) {
+    e.preventDefault();
+    const prop = e.target.id;
+    dispatch(loginSlice.actions.set({ [prop]: e.target.value }));
+  }
+  useEffect(() => {
+    if (isLogged) {
+      navigate("/", { replace: true });
+    }
+  }, [isLogged, navigate]);
   const loginHandler = (e) => {
     e.preventDefault();
-    let cancel = false;
-    const formData = new FormData(formRef.current);
-    const jsonData = Object.fromEntries(formData.entries());
-    ["email", "password"].forEach((prop) => {
-      if (jsonData[prop]) {
-        document.querySelector(
-          `form#login > div#${prop} > span#warning`
-        ).style.display = "none";
-      } else {
-        document.querySelector(
-          `form#login > div#${prop} > span#warning`
-        ).style.display = "inline";
-        cancel = true;
-      }
-    });
-    if (!cancel) {
-      dispatch(loginThunk(jsonData));
-    }
+    dispatch(loginThunk);
   };
-  if (isLogged) {
-    navigate("/", { replace: true });
-  }
+
   return (
-    <form action="POST" id="login" ref={formRef}>
+    <form action="POST" id="login">
       <div id="email">
         <label htmlFor="email">Email:</label>
         <br />
@@ -44,8 +37,12 @@ export default function LoginPage() {
           id="email"
           required
           placeholder="emailinizi daxil edin."
+          value={email}
+          onChange={changeHandler}
         />
-        <span id="warning">Zəhmət olmasa emailinizi daxil edin.</span>
+        {!email.length && (
+          <span id="warning">Zəhmət olmasa emailinizi daxil edin.</span>
+        )}
       </div>
       <div id="password">
         <label htmlFor="password">Şifrə:</label>
@@ -55,9 +52,13 @@ export default function LoginPage() {
           name="password"
           id="password"
           required
+          value={password}
+          onChange={changeHandler}
           placeholder="şifrənizi daxil edin."
         />
-        <span id="warning">Zəhmət olmasa şifrənizi daxil edin.</span>
+        {!password.length && (
+          <span id="warning">Zəhmət olmasa şifrənizi daxil edin.</span>
+        )}
       </div>
       <br />
       <button type="submit" onClick={loginHandler}>
