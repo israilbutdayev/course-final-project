@@ -2,8 +2,7 @@ const express = require("express");
 const products = require("./products.json");
 const router = express.Router();
 const mysql = require("mysql");
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
+
 const usersRouter = require("../api/users");
 
 const connection = mysql.createConnection({

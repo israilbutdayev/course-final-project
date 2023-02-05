@@ -13,7 +13,5 @@ const tokensModel = sequelize.define(
     freezeTableName: true,
   }
 );
-usersModel.hasOne(tokensModel);
-tokensModel.belongsTo(usersModel);
 
 module.exports = tokensModel;

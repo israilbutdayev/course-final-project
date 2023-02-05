@@ -9,7 +9,6 @@ const access_token_secret = process.env.ACCESS_TOKEN_SECRET;
 const refresh_token_secret = process.env.REFRESH_TOKEN_SECRET;
 
 async function registration(req, res) {
-  await tokensModel.sync();
   const jsonData = req.body;
   if (
     ["firstName", "lastName", "email", "password"].some(
@@ -42,7 +41,7 @@ async function registration(req, res) {
         newToken.userId = user.id;
         await newToken.save();
         await user.save();
-        res.json({
+        res.cookie("refresh_token", refresh_token, { httpOnly: true }).json({
           success: true,
           error: false,
           message: "Sistemə uğurla daxil olundu.",
@@ -78,7 +77,7 @@ async function registration(req, res) {
         });
         newToken.userId = newUser.id;
         await newToken.save();
-        res.json({
+        res.cookie("refresh_token", refresh_token, { httpOnly: true }).json({
           success: true,
           error: false,
           message: "Qeydiyyat uğurlu oldu",
@@ -92,7 +91,6 @@ async function registration(req, res) {
 
 async function login(req, res) {
   const jsonData = req.body;
-  await tokensModel.sync();
   if (["email", "password"].some((prop) => jsonData[prop] === "")) {
     return res.json({
       success: false,
@@ -233,7 +231,7 @@ async function refresh(req, res) {
       });
     }
   } catch (error) {
-    // console.log(error);
+    console.log(error);
     res.clearCookie("refresh_token").json({
       success: false,
       error: true,
