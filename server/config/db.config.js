@@ -1,9 +1,12 @@
 const { Sequelize, DataTypes } = require("sequelize");
 
-const sequelize = new Sequelize("final_project", "root", "0000", {
-  host: "localhost",
+const sequelize = new Sequelize({
   dialect: "mysql",
+  host: "localhost",
   port: 3306,
+  database: "final_project",
+  username: "root",
+  password: "0000",
 });
 try {
   sequelize.authenticate().then(() => {
