@@ -1,14 +1,13 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/db.config");
 
-const users = sequelize.define(
+const usersModel = sequelize.define(
   "users",
   {
     firstName: DataTypes.STRING,
     lastName: DataTypes.STRING,
     email: DataTypes.STRING,
     password: DataTypes.STRING,
-    refresh_token: DataTypes.STRING,
   },
   {
     // timestamps: false,
@@ -16,4 +15,4 @@ const users = sequelize.define(
     freezeTableName: true,
   }
 );
-module.exports = users;
+module.exports = usersModel;

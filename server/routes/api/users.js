@@ -8,10 +8,8 @@ const {
   update,
 } = require("../../controllers/users-controller");
 const authMiddleware = require("../../middlewares/auth-middleware");
-const jwtMiddleware = require("../../middlewares/jwt-middleware");
-const usersRouter = express.Router();
 
-// usersRouter.use(jwtMiddleware);
+const usersRouter = express.Router();
 
 usersRouter.post("/refresh", refresh);
 

@@ -1,12 +1,15 @@
 require("dotenv").config();
 const usersModel = require("../models/users");
+const tokensModel = require("../models/tokens");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const saltRounds = 10;
 const salt = bcrypt.genSaltSync(saltRounds);
 const access_token_secret = process.env.ACCESS_TOKEN_SECRET;
 const refresh_token_secret = process.env.REFRESH_TOKEN_SECRET;
+
 async function registration(req, res) {
+  await tokensModel.sync();
   const jsonData = req.body;
   if (
     ["firstName", "lastName", "email", "password"].some(
@@ -33,7 +36,11 @@ async function registration(req, res) {
         const refresh_token = jwt.sign(payload, refresh_token_secret, {
           expiresIn: 1000 * 60 * 60 * 24 * 365,
         });
-        user.refresh_token = refresh_token;
+        const newToken = await tokensModel.create({
+          refresh_token,
+        });
+        newToken.userId = user.id;
+        await newToken.save();
         await user.save();
         res.json({
           success: true,
@@ -58,22 +65,19 @@ async function registration(req, res) {
       const refresh_token = jwt.sign(payload, refresh_token_secret, {
         expiresIn: 1000 * 60 * 60 * 24 * 365,
       });
-      const newUser = await usersModel
-        .create({
-          firstName,
-          lastName,
-          email,
-          password: hash,
-          refresh_token,
-        })
-        .catch((err) =>
-          res.json({
-            success: false,
-            error: true,
-            message: err,
-          })
-        );
+      const newUser = await usersModel.create({
+        firstName,
+        lastName,
+        email,
+        password: hash,
+        refresh_token,
+      });
       if (newUser) {
+        const newToken = await tokensModel.create({
+          refresh_token,
+        });
+        newToken.userId = newUser.id;
+        await newToken.save();
         res.json({
           success: true,
           error: false,
@@ -88,6 +92,7 @@ async function registration(req, res) {
 
 async function login(req, res) {
   const jsonData = req.body;
+  await tokensModel.sync();
   if (["email", "password"].some((prop) => jsonData[prop] === "")) {
     return res.json({
       success: false,
@@ -110,7 +115,11 @@ async function login(req, res) {
         const refresh_token = jwt.sign(payload, access_token_secret, {
           expiresIn: 1000 * 60 * 60 * 24 * 365,
         });
-        user.refresh_token = refresh_token;
+        const newToken = await tokensModel.create({
+          refresh_token,
+        });
+        newToken.userId = user.id;
+        await newToken.save();
         await user.save();
         res.cookie("refresh_token", refresh_token, { httpOnly: true }).json({
           success: true,
@@ -138,15 +147,14 @@ async function login(req, res) {
 
 async function logout(req, res) {
   try {
-    const { email } = req.userData;
-    const user = await usersModel.findOne({
+    const { refresh_token } = req.cookies;
+    const token = await tokensModel.findOne({
       where: {
-        email,
+        refresh_token,
       },
     });
-    user.refresh_token = "";
-    await user.save();
-    res.json({
+    await token.destroy();
+    res.clearCookie("refresh_token").json({
       success: true,
       error: false,
       message: "Sistemdən uğurla çıxıldı.",
@@ -163,23 +171,14 @@ async function logout(req, res) {
 }
 
 async function info(req, res) {
-  const { email } = req.userData;
+  const { email, access_token } = req.userData;
   const user = await usersModel.findOne({
     where: {
       email,
     },
   });
   const { firstName, lastName } = user;
-  const payload = { email, firstName, lastName };
-  const access_token = jwt.sign(payload, access_token_secret, {
-    expiresIn: 1000 * 60,
-  });
-  const refresh_token = jwt.sign(payload, access_token_secret, {
-    expiresIn: 1000 * 60 * 60 * 24 * 365,
-  });
-  user.refresh_token = refresh_token;
-  await user.save();
-  res.cookie("refresh_token", refresh_token, { httpOnly: true }).json({
+  res.json({
     success: true,
     error: false,
     user: { firstName, lastName, email },
@@ -190,25 +189,42 @@ async function info(req, res) {
 async function refresh(req, res) {
   try {
     let refresh_token = req.cookies.refresh_token;
-    const foundUser = await usersModel.findOne({
+    const activeToken = await tokensModel.findOne({
       where: {
         refresh_token,
       },
     });
-    if (!foundUser) {
-      res.json({
+    if (!activeToken) {
+      const { email } = jwt.decode(refresh_token);
+      const user = await usersModel.findOne({
+        where: {
+          email,
+        },
+      });
+      const hackedUsers = await tokensModel.findAll({
+        where: { userId: user.id },
+      });
+      for (const hackedUser of hackedUsers) {
+        await hackedUser.destroy();
+      }
+      return res.clearCookie("refresh_token").json({
         success: false,
         error: true,
-        message: "Token yararsızdır.",
+        message: "Sistemə yenidən giriş etmək lazımdır.",
       });
     } else {
-      const { email, firstName, lastName } = foundUser;
+      const data = jwt.decode(refresh_token);
+      const { email, firstName, lastName } = data;
       const payload = { firstName, lastName, email };
-      const access_token = jwt.sign(payload, access_token_secret);
-      refresh_token = jwt.sign(payload, refresh_token_secret);
-      foundUser.refresh_token = refresh_token;
-      await foundUser.save();
-      res.json({
+      const access_token = jwt.sign(payload, access_token_secret, {
+        expiresIn: 1000 * 60,
+      });
+      const new_refresh_token = jwt.sign(payload, refresh_token_secret, {
+        expiresIn: 1000 * 60 * 60 * 24 * 365,
+      });
+      activeToken.refresh_token = new_refresh_token;
+      await activeToken.save();
+      res.cookie("refresh_token", new_refresh_token, { httpOnly: true }).json({
         success: true,
         error: false,
         successMessage: "Token uğurla yeniləndi.",
@@ -217,7 +233,7 @@ async function refresh(req, res) {
       });
     }
   } catch (error) {
-    console.log(error);
+    // console.log(error);
     res.clearCookie("refresh_token").json({
       success: false,
       error: true,
@@ -229,36 +245,30 @@ async function refresh(req, res) {
 
 async function update(req, res) {
   try {
-    const { email } = req.userData;
+    const { email, access_token } = req.userData;
     const user = await usersModel.findOne({
       where: {
         email,
       },
     });
     const { email: newEmail } = req.body;
-    const usedEmail = await usersModel.findOne({
-      where: {
-        email: newEmail,
-      },
-    });
-    if (usedEmail) {
-      const { firstName, lastName, email } = req.userData;
-      const payload = { email, firstName, lastName };
-      const access_token = jwt.sign(payload, access_token_secret, {
-        expiresIn: 1000 * 60,
+    if (email !== newEmail) {
+      const usedEmail = await usersModel.findOne({
+        where: {
+          email: newEmail,
+        },
       });
-      const refresh_token = jwt.sign(payload, access_token_secret, {
-        expiresIn: 1000 * 60 * 60 * 24 * 365,
-      });
-      user.refresh_token = refresh_token;
-      await user.save();
-      res.cookie("refresh_token", refresh_token, { httpOnly: true }).json({
-        success: false,
-        error: true,
-        message: "Email artıq istifadə olunub.",
-        access_token,
-      });
-    } else if (user) {
+      if (usedEmail) {
+        const { access_token } = req.userData;
+        res.json({
+          success: false,
+          error: true,
+          message: "Email artıq istifadə olunub.",
+          access_token,
+        });
+      }
+    }
+    if (user) {
       const data = req.body;
       const password = data?.password;
       let checkPassword = bcrypt.compareSync(password, user.password);
@@ -274,17 +284,9 @@ async function update(req, res) {
         }
         const newHash = bcrypt.hashSync(data.newPassword, salt);
         user.password = newHash;
-        const { firstName, lastName, email } = user;
-        const payload = { email, firstName, lastName };
-        const access_token = jwt.sign(payload, access_token_secret, {
-          expiresIn: 1000 * 60,
-        });
-        const refresh_token = jwt.sign(payload, access_token_secret, {
-          expiresIn: 1000 * 60 * 60 * 24 * 365,
-        });
-        user.refresh_token = refresh_token;
         await user.save();
-        res.cookie("refresh_token", refresh_token, { httpOnly: true }).json({
+        const { firstName, lastName, email } = user;
+        res.json({
           success: true,
           error: false,
           message: "Məlumatlar uğurla yeniləndi.",
