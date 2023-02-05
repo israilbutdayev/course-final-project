@@ -1,17 +1,23 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-import { registrationSlice, registrationThunk } from "../../redux/store";
+import {
+  loginSlice,
+  registrationSlice,
+  useRegistrationMutation,
+  userSlice,
+} from "../../redux/store";
 import "./RegistrationPage.css";
 import { useEffect } from "react";
 
 function RegistrationPage() {
-  const { isLogged } = useSelector((state) => state.credentials);
+  const { isLogged } = useSelector((state) => state.user);
   const { firstName, lastName, email, password } = useSelector(
     (state) => state.registration
   );
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const [register] = useRegistrationMutation();
   useEffect(() => {
     if (isLogged) {
       navigate("/", { replace: true });
@@ -20,11 +26,28 @@ function RegistrationPage() {
   function changeHandler(e) {
     e.preventDefault();
     const prop = e.target.id;
-    dispatch(registrationSlice.actions.set({ [prop]: e.target.value }));
+    dispatch(registrationSlice.actions.apply({ [prop]: e.target.value }));
   }
-  const submitHandler = (e) => {
+  const submitHandler = async (e) => {
     e.preventDefault();
-    dispatch(registrationThunk);
+    const response = await register({ firstName, lastName, email, password });
+    if (response.data.success) {
+      const {
+        user: { firstName, lastName, email },
+        access_token,
+      } = response.data;
+      dispatch(
+        userSlice.actions.set({
+          isLogged: true,
+          firstName,
+          lastName,
+          email,
+          access_token,
+        })
+      );
+      dispatch(loginSlice.actions.reset({}));
+      dispatch(registrationSlice.actions.reset({}));
+    }
   };
 
   return (

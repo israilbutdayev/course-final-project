@@ -1,29 +1,44 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { useSelector, useDispatch } from "react-redux";
-import { loginThunk } from "../../redux/store";
-import { useEffect } from "react";
-import { loginSlice } from "../../redux/store";
+import { useDispatch, useSelector } from "react-redux";
+import { loginSlice, registrationSlice, userSlice } from "../../redux/store";
+import { useLoginMutation } from "../../redux/store";
 import "./LoginPage.css";
 
 export default function LoginPage() {
-  const { isLogged } = useSelector((state) => state.credentials);
   const { email, password } = useSelector((state) => state.login);
-  const navigate = useNavigate();
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const [loginQuery] = useLoginMutation();
+
   function changeHandler(e) {
     e.preventDefault();
     const prop = e.target.id;
-    dispatch(loginSlice.actions.set({ [prop]: e.target.value }));
+    dispatch(loginSlice.actions.apply({ [prop]: e.target.value }));
   }
-  useEffect(() => {
-    if (isLogged) {
+  const loginHandler = async (e) => {
+    e.preventDefault();
+    const response = await loginQuery({ email, password });
+    const { success } = response.data;
+    if (success) {
+      const {
+        access_token,
+        user: { firstName, lastName },
+      } = response.data;
+      dispatch(
+        userSlice.actions.set({
+          initialLoad: false,
+          isLogged: true,
+          email,
+          firstName,
+          lastName,
+          access_token,
+        })
+      );
+      dispatch(loginSlice.actions.reset());
+      dispatch(registrationSlice.actions.reset());
       navigate("/", { replace: true });
     }
-  }, [isLogged, navigate]);
-  const loginHandler = (e) => {
-    e.preventDefault();
-    dispatch(loginThunk);
   };
 
   return (
