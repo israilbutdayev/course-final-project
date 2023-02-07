@@ -6,20 +6,21 @@ import Product from "../Product/Product";
 import "./Products.css";
 import { useState } from "react";
 import { useMemo } from "react";
+
 store.dispatch(getProductsThunk());
 
 export default function Products() {
-  const products = useSelector((state) => state.product);
+  const products = useSelector((state) => state.products);
   const [count, setCount] = useState(10);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState();
   const pages = useMemo(() => {
-    return Math.ceil(products.products.length / count);
-  }, [count, products.products.length]);
+    return Math.ceil(products?.products?.length / count);
+  }, [count, products?.products?.length]);
   const pageProducts = useMemo(() => {
     const startIndex = (page - 1) * count;
     const endIndex = startIndex + count;
-    return [...products.products]
+    return [...products?.products]
       .sort((a, b) => a.id - b.id)
       .slice(startIndex, endIndex);
   }, [count, page, products]);
@@ -42,7 +43,7 @@ export default function Products() {
         <div id="page">
           <span>Səhifə</span>
           <select onChange={pageHandler} value={`${page}`}>
-            {[...Array(pages).keys()].map((i) => (
+            {[...Array(pages || []).keys()].map((i) => (
               <option key={i} value={i + 1}>
                 {i + 1}
               </option>

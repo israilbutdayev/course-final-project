@@ -1,4 +1,4 @@
-const { Sequelize, DataTypes } = require("sequelize");
+import { Sequelize } from "sequelize";
 
 const sequelize = new Sequelize({
   dialect: "mysql",
@@ -8,12 +8,13 @@ const sequelize = new Sequelize({
   username: "root",
   password: "0000",
 });
+
 try {
-  sequelize.authenticate().then(() => {
-    console.log("Connection has been established successfully.");
-  });
+  await sequelize.authenticate();
+  await sequelize.sync({ alter: true });
+  console.log("Connection has been established successfully.");
 } catch (error) {
   console.error("Unable to connect to the database:", error);
 }
 
-module.exports = sequelize;
+export default sequelize;

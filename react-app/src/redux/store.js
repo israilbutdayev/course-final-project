@@ -11,13 +11,13 @@ const productsSlice = createSlice({
   },
 });
 
-const api = createApi({
-  reducerPath: "api",
-  baseQuery: fetchBaseQuery({ baseUrl: "/api" }),
+const userApi = createApi({
+  reducerPath: "api/user",
+  baseQuery: fetchBaseQuery({ baseUrl: "/api/user" }),
   endpoints: (builder) => ({
     info: builder.query({
       query: (access_token) => ({
-        url: "/user/info",
+        url: "/info",
         method: "POST",
         body: {},
         headers: {
@@ -27,14 +27,14 @@ const api = createApi({
     }),
     refresh: builder.query({
       query: () => ({
-        url: "/user/refresh",
+        url: "/refresh",
         method: "POST",
         body: {},
       }),
     }),
     registration: builder.mutation({
       query: (data) => ({
-        url: "/user/registration",
+        url: "/registration",
         method: "POST",
         body: data,
       }),
@@ -42,7 +42,7 @@ const api = createApi({
     login: builder.mutation({
       query: (data) => {
         return {
-          url: "/user/login",
+          url: "/login",
           method: "POST",
           body: data,
         };
@@ -50,7 +50,7 @@ const api = createApi({
     }),
     logout: builder.query({
       query: (access_token) => ({
-        url: "/user/logout",
+        url: "/logout",
         headers: {
           Authorization: "Bearer " + access_token,
         },
@@ -58,12 +58,25 @@ const api = createApi({
     }),
     update: builder.mutation({
       query: (data) => ({
-        url: "/user/update",
+        url: "/update",
         method: "PUT",
         body: data,
         headers: {
           Authorization: "Bearer " + data.access_token,
         },
+      }),
+    }),
+  }),
+});
+
+const productApi = createApi({
+  reducerPath: "api/product",
+  baseQuery: fetchBaseQuery({ baseUrl: "/api/products" }),
+  endpoints: (builder) => ({
+    get: builder.query({
+      query: (id) => ({
+        url: "/" + id,
+        method: "GET",
       }),
     }),
   }),
@@ -129,21 +142,22 @@ export const registrationSlice = createSlice({
 });
 
 export const getProductsThunk = (param) => async (dispatch, getState) => {
-  const response = await (await axios.get(`/api/products?title=${param}`)).data;
+  const response = await (await axios.get("/api/products")).data;
   const action = { products: response.products, count: response.total };
   dispatch(productsSlice.actions.setProducts(action));
 };
 
 const store = configureStore({
   reducer: {
-    product: productsSlice.reducer,
+    products: productsSlice.reducer,
     user: userSlice.reducer,
     login: loginSlice.reducer,
     registration: registrationSlice.reducer,
-    [api.reducerPath]: api.reducer,
+    [userApi.reducerPath]: userApi.reducer,
+    [productApi.reducerPath]: productApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware().concat(api.middleware),
+    getDefaultMiddleware().concat(userApi.middleware, productApi.middleware),
 });
 
 export default store;
@@ -154,4 +168,6 @@ export const {
   useRegistrationMutation,
   useLoginMutation,
   useUpdateMutation,
-} = api;
+} = userApi;
+
+export const { useGetQuery } = productApi;

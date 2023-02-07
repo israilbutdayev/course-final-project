@@ -1,23 +1,15 @@
-const express = require("express");
-const {
+import express from "express";
+import {
   registration,
   login,
   logout,
   info,
   refresh,
   update,
-} = require("../../controllers/users-controller");
-const authMiddleware = require("../../middlewares/auth-middleware");
-const usersModel = require("../../models/users");
-const tokensModel = require("../../models/tokens");
+} from "../../controllers/users-controller.js";
+import authMiddleware from "../../middlewares/auth-middleware.js";
 
 const usersRouter = express.Router();
-
-usersRouter.use(async (req, res, next) => {
-  await usersModel.sync();
-  await tokensModel.sync();
-  next();
-});
 
 usersRouter.post("/refresh", refresh);
 
@@ -33,4 +25,4 @@ usersRouter.post("/info", info);
 
 usersRouter.put("/update", update);
 
-module.exports = usersRouter;
+export default usersRouter;

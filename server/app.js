@@ -1,16 +1,22 @@
-const express = require("express");
-const path = require("path");
-const apiRouter = require("./routes/api/api");
-const cookieParser = require("cookie-parser");
+import express from "express";
+import path from "path";
+import cookieParser from "cookie-parser";
+import AdminJS from "adminjs";
+import AdminJSExpress from "@adminjs/express";
+import session from "express-session";
+import Connect from "express-mysql-session";
+import AdminJSSequelize from "@adminjs/sequelize";
+import * as url from "url";
+import apiRouter from "./routes/api/api.js";
+import usersModel from "./models/users.js";
+import tokensModel from "./models/tokens.js";
+import productsModel from "./models/products.js";
+
 const app = express();
 const port = 3000;
-const AdminJS = require("adminjs");
-const AdminJSExpress = require("@adminjs/express");
-const session = require("express-session");
-const Connect = require("express-mysql-session");
-const AdminJSSequelize = require("@adminjs/sequelize");
-const usersModel = require("./models/users");
-const tokensModel = require("./models/tokens");
+const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
+const __filename = url.fileURLToPath(import.meta.url);
+
 const pth = path.join(path.dirname(__dirname), "client");
 
 const DEFAULT_ADMIN = {
@@ -30,55 +36,52 @@ AdminJS.registerAdapter({
   Database: AdminJSSequelize.Database,
 });
 
-const start = async () => {
-  app.use(express.static(path.join(pth)));
-  app.use(express.json());
-  app.use(cookieParser());
-  app.use("/api", apiRouter);
-  const adminOptions = {
-    // We pass Category to `resources`
-    resources: [usersModel, tokensModel],
-  };
-  const admin = new AdminJS(adminOptions);
+app.use(express.static(path.join(pth, "static")));
+app.use(express.json());
+app.use(cookieParser());
 
-  const ConnectSession = Connect(session);
-  const options = {
-    host: "localhost",
-    port: 3306,
-    user: "root",
-    password: "0000",
-    database: "final_project",
-  };
-  const sessionStore = new ConnectSession(options);
-
-  const adminRouter = AdminJSExpress.buildAuthenticatedRouter(
-    admin,
-    {
-      authenticate,
-      cookieName: "adminjs",
-      cookiePassword: "sessionsecret",
-    },
-    null,
-    {
-      store: sessionStore,
-      resave: true,
-      saveUninitialized: true,
-      secret: "sessionsecret",
-      cookie: {
-        httpOnly: process.env.NODE_ENV === "production",
-        secure: process.env.NODE_ENV === "production",
-      },
-      name: "adminjs",
-    }
-  );
-  app.use(admin.options.rootPath, adminRouter);
-  // adminJS.watch();
-  console.log(admin.options.rootPath);
-  app.get("*", (req, res) => {
-    res.sendFile(path.join(pth, "index.html"));
-  });
-  app.listen(port, () => {
-    console.log(`Example app listening on port ${port}`);
-  });
+const adminOptions = {
+  // We pass Category to `resources`
+  resources: [productsModel, usersModel, tokensModel],
 };
-start();
+const admin = new AdminJS(adminOptions);
+
+const ConnectSession = Connect(session);
+const options = {
+  host: "localhost",
+  port: 3306,
+  user: "root",
+  password: "0000",
+  database: "final_project",
+};
+const sessionStore = new ConnectSession(options);
+
+const adminRouter = AdminJSExpress.buildAuthenticatedRouter(
+  admin,
+  {
+    authenticate,
+    cookieName: "adminjs",
+    cookiePassword: "sessionsecret",
+  },
+  null,
+  {
+    store: sessionStore,
+    resave: true,
+    saveUninitialized: true,
+    secret: "sessionsecret",
+    cookie: {
+      httpOnly: process.env.NODE_ENV === "production",
+      secure: process.env.NODE_ENV === "production",
+    },
+    name: "adminjs",
+  }
+);
+app.use(admin.options.rootPath, adminRouter);
+// adminJS.watch();
+app.use("/api", apiRouter);
+app.get("*", (req, res) => {
+  res.sendFile(path.join(pth, "index.html"));
+});
+app.listen(port, () => {
+  console.log(`Example app listening on port ${port}`);
+});

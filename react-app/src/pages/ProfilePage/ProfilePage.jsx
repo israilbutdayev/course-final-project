@@ -5,7 +5,6 @@ import {
   useLazyLogoutQuery,
   userSlice,
   useUpdateMutation,
-  useLazyInfoQuery,
 } from "../../redux/store";
 export default function Profile() {
   const navigate = useNavigate();

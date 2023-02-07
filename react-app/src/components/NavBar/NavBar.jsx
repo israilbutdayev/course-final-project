@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useCallback, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import {
@@ -10,16 +10,12 @@ import "./NavBar.css";
 
 export default function NavBar() {
   const dispatch = useDispatch();
-  const { isLogged, firstName, lastName, access_token } = useSelector(
-    (state) => state.user
-  );
+  const { isLogged, firstName, lastName } = useSelector((state) => state.user);
   const [triggerRefresh] = useLazyRefreshQuery();
   const [triggerInfo] = useLazyInfoQuery();
-  const init = async () => {
-    if (!access_token) {
-      const resultRefresh = await triggerRefresh({
-        pollingInterval: 1 * 1000,
-      }).unwrap();
+  const init = useCallback(() => {
+    const run = async () => {
+      const resultRefresh = await triggerRefresh().unwrap();
       if (resultRefresh.success) {
         const { access_token: t_access_token } = resultRefresh;
         const resultInfo = await triggerInfo(t_access_token).unwrap();
@@ -39,19 +35,29 @@ export default function NavBar() {
             })
           );
         }
+      } else {
+        dispatch(userSlice.actions.reset());
+        dispatch(
+          userSlice.actions.set({ initialLoad: false, isLogged: false })
+        );
       }
-    }
-  };
-  if (isLogged) {
-    setInterval(init, 55 * 1000);
-  }
+    };
+    run();
+  }, [dispatch, triggerInfo, triggerRefresh]);
   useEffect(() => {
     init();
-  }, []);
+    const interval = setInterval(() => {
+      if (isLogged) {
+        init();
+      }
+    }, 55 * 1000);
+    return () => clearInterval(interval);
+  }, [init, isLogged]);
   return (
     <nav id="navbar">
       <Link to="/">Ana səhifə</Link>
       <Link to="/search">Ətraflı axtarış</Link>
+      <Link to="/product">Məhsul</Link>
       {!isLogged && <Link to="/login">Daxil ol</Link>}
       {!isLogged && <Link to="/registration">Qeydiyyat</Link>}
       {isLogged && <Link to="/cart">Kart</Link>}

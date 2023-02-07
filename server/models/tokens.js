@@ -1,6 +1,5 @@
-const { DataTypes } = require("sequelize");
-const sequelize = require("../config/db.config");
-const usersModel = require("./users");
+import { DataTypes } from "sequelize";
+import sequelize from "../config/db.config.js";
 
 const tokensModel = sequelize.define(
   "tokens",
@@ -8,10 +7,8 @@ const tokensModel = sequelize.define(
     refresh_token: DataTypes.STRING,
   },
   {
-    // timestamps: false,
-    sync: { alter: true },
     freezeTableName: true,
   }
 );
 
-module.exports = tokensModel;
+export default tokensModel;

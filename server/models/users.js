@@ -1,5 +1,5 @@
-const { DataTypes } = require("sequelize");
-const sequelize = require("../config/db.config");
+import { DataTypes } from "sequelize";
+import sequelize from "../config/db.config.js";
 
 const usersModel = sequelize.define(
   "users",
@@ -10,9 +10,7 @@ const usersModel = sequelize.define(
     password: DataTypes.STRING,
   },
   {
-    // timestamps: false,
-    sync: { alter: true },
     freezeTableName: true,
   }
 );
-module.exports = usersModel;
+export default usersModel;

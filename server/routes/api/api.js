@@ -1,11 +1,11 @@
-const express = require("express");
-const products = require("./products.json");
-const router = express.Router();
-const mysql = require("mysql");
+import { Router } from "express";
+import { createConnection } from "mysql";
+import usersRouter from "./users.js";
+import productsRouter from "./products.js";
 
-const usersRouter = require("../api/users");
+const router = Router();
 
-const connection = mysql.createConnection({
+const connection = createConnection({
   host: "localhost",
   port: 3306,
   user: "root",
@@ -15,12 +15,8 @@ const connection = mysql.createConnection({
 
 connection.connect();
 
-router.get("/products", (req, res) => {
-  res.json(products);
-});
-
-router.get("/product/:id", (req, res) => {});
-
 router.use("/user", usersRouter);
 
-module.exports = router;
+router.use("/products", productsRouter);
+
+export default router;

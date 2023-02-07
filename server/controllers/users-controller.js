@@ -1,8 +1,9 @@
-require("dotenv").config();
-const usersModel = require("../models/users");
-const tokensModel = require("../models/tokens");
-const jwt = require("jsonwebtoken");
-const bcrypt = require("bcrypt");
+import * as dotenv from "dotenv";
+dotenv.config();
+import jwt from "jsonwebtoken";
+import bcrypt from "bcrypt";
+import usersModel from "../models/users.js";
+import tokensModel from "../models/tokens.js";
 const saltRounds = 10;
 const salt = bcrypt.genSaltSync(saltRounds);
 const access_token_secret = process.env.ACCESS_TOKEN_SECRET;
@@ -186,7 +187,10 @@ async function info(req, res) {
 
 async function refresh(req, res) {
   try {
-    let refresh_token = req.cookies.refresh_token;
+    let refresh_token = req.cookies?.refresh_token;
+    if (!refresh_token) {
+      throw new Error();
+    }
     const activeToken = await tokensModel.findOne({
       where: {
         refresh_token,
@@ -231,7 +235,7 @@ async function refresh(req, res) {
       });
     }
   } catch (error) {
-    console.log(error);
+    // console.log(error);
     res.clearCookie("refresh_token").json({
       success: false,
       error: true,
@@ -315,4 +319,4 @@ async function update(req, res) {
   }
 }
 
-module.exports = { registration, login, logout, info, refresh, update };
+export { registration, login, logout, info, refresh, update };
