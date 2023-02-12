@@ -1,6 +1,10 @@
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { getProductsThunk, searchProductsThunk } from "../../redux/store";
+import {
+  getProductsThunk,
+  searchProductsThunk,
+  searchSlice,
+} from "../../redux/store";
 import Product from "../Product/Product";
 import { useState } from "react";
 import { useMemo } from "react";

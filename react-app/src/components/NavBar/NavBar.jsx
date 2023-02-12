@@ -19,6 +19,7 @@ import {
   useLoginMutation,
   useLazyLogoutQuery,
   searchProductsThunk,
+  searchSlice,
 } from "../../redux/store";
 
 export default function NavBar() {
@@ -263,7 +264,12 @@ export default function NavBar() {
           </React.Fragment>
         </div>
         <Navbar.Collapse className="order-1 flex items-center">
-          <Link to="/">Ana səhifə</Link>
+          <Link
+            onClick={() => dispatch(searchSlice.actions.apply({ set: false }))}
+            to="/"
+          >
+            Ana səhifə
+          </Link>
           {isLogged && <Link to="/products">Mənim məhsullarım</Link>}
           <Link to="/search">Ətraflı axtarış</Link>
           <form className="flex">
