@@ -17,7 +17,7 @@ const port = 3000;
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 const __filename = url.fileURLToPath(import.meta.url);
 
-const pth = path.join(path.dirname(__dirname), "client");
+const client = path.join(path.dirname(__dirname), "client");
 
 const DEFAULT_ADMIN = {
   email: "israilbutdayev@gmail.com",
@@ -35,8 +35,8 @@ AdminJS.registerAdapter({
   Resource: AdminJSSequelize.Resource,
   Database: AdminJSSequelize.Database,
 });
+app.use(express.static(client));
 
-app.use(express.static(path.join(pth, "static")));
 app.use(express.json());
 app.use(cookieParser());
 
@@ -80,7 +80,7 @@ app.use(admin.options.rootPath, adminRouter);
 // adminJS.watch();
 app.use("/api", apiRouter);
 app.get("*", (req, res) => {
-  res.sendFile(path.join(pth, "index.html"));
+  res.sendFile(path.join(client, "index.html"));
 });
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
