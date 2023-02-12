@@ -1,19 +1,25 @@
-import React from "react";
-import { useSelector } from "react-redux";
-import { getProductsThunk } from "../../redux/store";
-import store from "../../redux/store";
+import React, { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { getProductsThunk, searchProductsThunk } from "../../redux/store";
 import Product from "../Product/Product";
-import "./Products.css";
 import { useState } from "react";
 import { useMemo } from "react";
-
-store.dispatch(getProductsThunk());
+import { Pagination, Label, Select } from "flowbite-react";
 
 export default function Products() {
+  const dispatch = useDispatch();
   const products = useSelector((state) => state.products);
-  const [count, setCount] = useState(10);
+  const search = useSelector((store) => store.search);
+  console.log(search);
+  useEffect(() => {
+    if (search.set) {
+      dispatch(searchProductsThunk(search));
+    } else {
+      dispatch(getProductsThunk());
+    }
+  }, [dispatch, search]);
+  const [count, setCount] = useState(9);
   const [page, setPage] = useState(1);
-  const [search, setSearch] = useState();
   const pages = useMemo(() => {
     return Math.ceil(products?.products?.length / count);
   }, [count, products?.products?.length]);
@@ -31,46 +37,40 @@ export default function Products() {
     setPage(result);
     setCount(Number(e.target.value));
   };
-  const pageHandler = (e) => {
-    setPage(Number(e.target.value));
+  const onPageChange = (e) => {
+    setPage(e);
   };
-  function searchHandler(e) {
-    e.preventDefault();
-  }
   return (
     <div>
-      <div id="pagination">
-        <div id="page">
-          <span>Səhifə</span>
-          <select onChange={pageHandler} value={`${page}`}>
-            {[...Array(pages || []).keys()].map((i) => (
-              <option key={i} value={i + 1}>
-                {i + 1}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div id="count">
-          <span>Məhsulların sayı</span>
-          <select name="count" id="count" onChange={countHandler} value={count}>
-            <option value="5">5</option>
-            <option value="10">10</option>
-            <option value="50">50</option>
-            <option value="100">100</option>
-          </select>
-        </div>
-        <div>
-          <input
-            id="search"
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-            }}
-          />
-          <button onClick={searchHandler}>Axtar</button>
+      <div
+        id="pagination"
+        className="flex flex-row justify-center items-center my-5"
+      >
+        <Pagination
+          currentPage={page}
+          onPageChange={onPageChange}
+          showIcons={true}
+          totalPages={pages}
+        />
+        <div id="select" className="flex">
+          <div className="mb-2 m-3">
+            <Label htmlFor="count" value="Məhsulların sayı" />
+          </div>
+          <Select
+            id="count"
+            required={true}
+            value={count}
+            onChange={countHandler}
+            className="p-0 m-0 h-0.5"
+          >
+            <option value="3">3</option>
+            <option value="9">9</option>
+            <option value="27">27</option>
+            <option value="81">81</option>
+          </Select>
         </div>
       </div>
-      <div id="products">
+      <div id="products" className="grid grid-cols-3 gap-1 gap-y-8">
         {pageProducts.map((product) => (
           <Product key={product.id} product={product} />
         ))}

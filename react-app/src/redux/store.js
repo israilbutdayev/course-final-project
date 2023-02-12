@@ -1,12 +1,30 @@
 import { configureStore, createSlice } from "@reduxjs/toolkit";
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import axios from "axios";
-const productsSlice = createSlice({
+
+export const productsSlice = createSlice({
   name: "products",
   initialState: { products: [], count: 0 },
   reducers: {
     setProducts: (state, action) => {
       return action.payload;
+    },
+  },
+});
+
+export const searchSlice = createSlice({
+  name: "search",
+  initialState: { set: false, title: "", brand: "", category: "" },
+  reducers: {
+    reset: (state, action) => {
+      return { set: false, title: "", brand: "", category: "" };
+    },
+    apply: (state, action) => {
+      console.log(state, action);
+      return { ...state, set: true, ...action.payload };
+    },
+    set: (state, action) => {
+      return { ...action.payload, set: true };
     },
   },
 });
@@ -74,9 +92,46 @@ const productApi = createApi({
   baseQuery: fetchBaseQuery({ baseUrl: "/api/products" }),
   endpoints: (builder) => ({
     get: builder.query({
-      query: (id) => ({
+      query: ({ id = "", method = "GET", access_token }) => {
+        console.log(method);
+        if (method === "GET")
+          return {
+            url: "/" + id,
+            method: "GET",
+          };
+        else if (method === "POST") {
+          return {
+            url: "",
+            method: "POST",
+            headers: { Authorization: "Bearer " + access_token },
+          };
+        }
+      },
+    }),
+    add: builder.mutation({
+      query: ({ product, access_token }) => ({
+        url: "/add",
+        method: "POST",
+        body: product,
+        headers: {
+          Authorization: "Bearer " + access_token,
+        },
+      }),
+    }),
+    delete: builder.mutation({
+      query: ({ id, access_token }) => ({
         url: "/" + id,
-        method: "GET",
+        method: "DELETE",
+        headers: {
+          Authorization: "Bearer " + access_token,
+        },
+      }),
+    }),
+    search: builder.query({
+      query: (data) => ({
+        url: "/search",
+        method: "POST",
+        body: data,
       }),
     }),
   }),
@@ -125,12 +180,47 @@ export const loginSlice = createSlice({
   },
 });
 
-export const registrationSlice = createSlice({
-  name: "registration",
-  initialState: { firstName: "", lastName: "", email: "", password: "" },
+export const profileSlice = createSlice({
+  name: "profile",
+  initialState: {
+    firstName: "",
+    lastName: "",
+    email: "",
+  },
   reducers: {
     reset(state, action) {
-      return { firstName: "", lastName: "", email: "", password: "" };
+      return {
+        firstName: "",
+        lastName: "",
+        email: "",
+      };
+    },
+    set(state, action) {
+      return action.payload;
+    },
+    apply(state, action) {
+      return { ...state, ...action.payload };
+    },
+  },
+});
+
+export const registrationSlice = createSlice({
+  name: "registration",
+  initialState: {
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+    newPassword: "",
+  },
+  reducers: {
+    reset(state, action) {
+      return {
+        firstName: "",
+        lastName: "",
+        email: "",
+        password: "",
+      };
     },
     set(state, action) {
       return action.payload;
@@ -147,12 +237,20 @@ export const getProductsThunk = (param) => async (dispatch, getState) => {
   dispatch(productsSlice.actions.setProducts(action));
 };
 
+export const searchProductsThunk = (data) => async (dispatch, getState) => {
+  const response = await (await axios.post("/api/products/search", data)).data;
+  const action = { products: response, count: response.length };
+  dispatch(productsSlice.actions.setProducts(action));
+};
+
 const store = configureStore({
   reducer: {
     products: productsSlice.reducer,
     user: userSlice.reducer,
     login: loginSlice.reducer,
     registration: registrationSlice.reducer,
+    profile: profileSlice.reducer,
+    search: searchSlice.reducer,
     [userApi.reducerPath]: userApi.reducer,
     [productApi.reducerPath]: productApi.reducer,
   },
@@ -170,4 +268,10 @@ export const {
   useUpdateMutation,
 } = userApi;
 
-export const { useGetQuery } = productApi;
+export const {
+  useGetQuery,
+  useLazyGetQuery,
+  useAddMutation,
+  useDeleteMutation,
+  useLazySearchQuery,
+} = productApi;

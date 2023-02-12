@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import {
@@ -7,7 +7,8 @@ import {
   useRegistrationMutation,
   userSlice,
 } from "../../redux/store";
-import "./RegistrationPage.css";
+import { Label, TextInput, Button, Alert } from "flowbite-react";
+// import "./RegistrationPage.css";
 import { useEffect } from "react";
 
 function RegistrationPage() {
@@ -18,11 +19,14 @@ function RegistrationPage() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [register] = useRegistrationMutation();
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
   useEffect(() => {
     if (isLogged) {
       navigate("/", { replace: true });
     }
   }, [isLogged, navigate]);
+
   function changeHandler(e) {
     e.preventDefault();
     const prop = e.target.id;
@@ -47,80 +51,77 @@ function RegistrationPage() {
       );
       dispatch(loginSlice.actions.reset({}));
       dispatch(registrationSlice.actions.reset({}));
+    } else if (response.data.error) {
+      setShowAlert(true);
+      setAlertMessage(response.data.message);
+      setTimeout(() => {
+        setShowAlert(false);
+      }, 3000);
     }
   };
 
   return (
-    <form action="POST" id="registration">
-      <div id="firstName">
-        <label htmlFor="firstName">Ad:</label>
-        <br />
-        <input
-          type="text"
-          name="firstName"
-          id="firstName"
-          required
-          placeholder="Adınızı daxil edin."
-          value={firstName}
-          onChange={changeHandler}
-        />
-        {!firstName.length && (
-          <span id="warning">Zəhmət olmasa adınızı daxil edin.</span>
-        )}
-      </div>
-      <div id="lastName">
-        <label htmlFor="lastName">Soyad:</label>
-        <br />
-        <input
-          type="text"
-          name="lastName"
-          id="lastName"
-          required
-          placeholder="Soyadınızı daxil edin."
-          value={lastName}
-          onChange={changeHandler}
-        />
-        {!lastName.length && (
-          <span id="warning">Zəhmət olmasa soyadınızı daxil edin.</span>
-        )}
-      </div>
-      <div id="email">
-        <label htmlFor="email">Email:</label>
-        <br />
-        <input
-          type="email"
-          name="email"
-          id="email"
-          required
-          placeholder="emailinizi daxil edin."
-          value={email}
-          onChange={changeHandler}
-        />
-        {!email.length && (
-          <span id="warning">Zəhmət olmasa emailinizi daxil edin.</span>
-        )}
-      </div>
-      <div id="password">
-        <label htmlFor="password">Şifrə:</label>
-        <br />
-        <input
-          type="password"
-          name="password"
-          id="password"
-          required
-          placeholder="şifrənizi daxil edin."
-          value={password}
-          onChange={changeHandler}
-        />
-        {!password.length && (
-          <span id="warning">Zəhmət olmasa şifrənizi daxil edin.</span>
-        )}
-      </div>
-      <br />
-      <button type="submit" onClick={submitHandler}>
-        Qeydiyyat
-      </button>
-    </form>
+    <React.Fragment>
+      {showAlert && (
+        <Alert color="failure" className="mx-4">
+          <span className="font-medium">{alertMessage}</span>
+        </Alert>
+      )}
+      <form className="flex flex-col gap-4 mx-10 my-6">
+        <div>
+          <div className="mb-2 block">
+            <Label htmlFor="firstName" value="Adınızı daxil edin." />
+          </div>
+          <TextInput
+            id="firstName"
+            type="text"
+            required={true}
+            shadow={true}
+            onChange={changeHandler}
+          />
+        </div>
+        <div>
+          <div className="mb-2 block">
+            <Label htmlFor="lastName" value="Soyadınızı daxil edin." />
+          </div>
+          <TextInput
+            id="lastName"
+            type="text"
+            required={true}
+            shadow={true}
+            onChange={changeHandler}
+          />
+        </div>
+        <div>
+          <div className="mb-2 block">
+            <Label htmlFor="email" value="Emailinizi daxil edin." />
+          </div>
+          <TextInput
+            id="email"
+            type="email"
+            placeholder="name@example.com"
+            required={true}
+            shadow={true}
+            onChange={changeHandler}
+          />
+        </div>
+        <div>
+          <div className="mb-2 block">
+            <Label htmlFor="password" value="Şifrənizi daxil edin." />
+          </div>
+          <TextInput
+            id="password"
+            type="password"
+            required={true}
+            shadow={true}
+            onChange={changeHandler}
+          />
+        </div>
+        <Button type="submit" onClick={submitHandler}>
+          Qeydiyyat
+        </Button>
+      </form>
+    </React.Fragment>
   );
 }
 
