@@ -35,6 +35,9 @@ AdminJS.registerAdapter({
   Resource: AdminJSSequelize.Resource,
   Database: AdminJSSequelize.Database,
 });
+
+app.use(express.static(__dirname));
+
 app.use(express.static(client));
 
 app.use(express.json({ limit: "50mb" }));

@@ -10,7 +10,7 @@ function Products() {
   const [deleter] = useDeleteMutation();
   const [getter, response] = useLazyGetQuery();
   const { isLoading, data } = response;
-  const [product, setProduct] = useState({
+  const newProduct = {
     thumbnail: "",
     title: "",
     brand: "",
@@ -19,7 +19,8 @@ function Products() {
     price: "",
     stock: "",
     description: "",
-  });
+  };
+  const [product, setProduct] = useState(newProduct);
   useEffect(() => {
     setTimeout(() => {
       getter({
@@ -38,12 +39,11 @@ function Products() {
   };
   const onAdd = () => {
     adder({ product });
+    setProduct(newProduct);
   };
   const onDelete = (id) => {
     deleter({ id });
-    getter({
-      method: "POST",
-    });
+    setProduct(newProduct);
   };
   if (isLoading) return <div>Loading...</div>;
   return (

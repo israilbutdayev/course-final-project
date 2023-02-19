@@ -9,8 +9,7 @@ import axios from "axios";
 import { buffer } from "node:stream/consumers";
 
 const __dirname = url.fileURLToPath(new URL("..", import.meta.url));
-const client = path.join(path.dirname(__dirname), "client");
-const imagesPath = path.join(client, "static", "images");
+const imagesPath = path.join(__dirname, "static", "images");
 if (!fs.existsSync(imagesPath)) {
   fs.mkdirSync(imagesPath);
 }
