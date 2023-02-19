@@ -1,15 +1,13 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-import {
-  loginSlice,
-  registrationSlice,
-  useRegistrationMutation,
-  userSlice,
-} from "../../redux/store";
+import loginSlice from "../../redux/slices/loginSlice";
+
 import { Label, TextInput, Button, Alert } from "flowbite-react";
-// import "./RegistrationPage.css";
 import { useEffect } from "react";
+import { useRegistrationMutation } from "../../redux/store";
+import registrationSlice from "../../redux/slices/registrationSlice";
+import userSlice from "../../redux/slices/userSlice";
 
 function RegistrationPage() {
   const { isLogged } = useSelector((state) => state.user);

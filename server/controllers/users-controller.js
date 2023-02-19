@@ -108,24 +108,18 @@ async function login(req, res) {
       if (checkPassword) {
         const { firstName, lastName } = user;
         const payload = { email, firstName, lastName };
-        const access_token = jwt.sign(payload, access_token_secret, {
-          expiresIn: 1000 * 60,
-        });
         const refresh_token = jwt.sign(payload, access_token_secret, {
           expiresIn: 1000 * 60 * 60 * 24 * 365,
         });
         const newToken = await tokensModel.create({
           refresh_token,
+          userId: user.id,
         });
-        newToken.userId = user.id;
         await newToken.save();
-        await user.save();
         res.cookie("refresh_token", refresh_token, { httpOnly: true }).json({
           success: true,
           error: false,
           message: "Sistemə uğurla daxil olundu.",
-          access_token,
-          user: { firstName, lastName, email },
         });
       } else {
         res.json({
@@ -191,12 +185,49 @@ async function refresh(req, res) {
     if (!refresh_token) {
       throw new Error();
     }
-    const activeToken = await tokensModel.findOne({
+    const activeTokens = await tokensModel.findAll({
       where: {
         refresh_token,
       },
     });
-    if (!activeToken) {
+    if (activeTokens.length) {
+      const data = jwt.decode(refresh_token);
+      const { email, firstName, lastName } = data;
+      const payload = { firstName, lastName, email };
+      const access_token = jwt.sign(payload, access_token_secret, {
+        expiresIn: 1000 * 60,
+      });
+      const user = await usersModel.findOne({
+        where: {
+          email,
+        },
+      });
+      const new_refresh_token = jwt.sign(payload, refresh_token_secret, {
+        expiresIn: 1000 * 60 * 60 * 24 * 365,
+      });
+      const existingTokens = await tokensModel.findAll({
+        where: {
+          refresh_token: new_refresh_token,
+        },
+      });
+      if (!existingTokens.length) {
+        await tokensModel.create({
+          refresh_token: new_refresh_token,
+          userId: user.id,
+        });
+        activeTokens.forEach((activeToken) => {
+          setTimeout(() => {
+            activeToken.destroy();
+          }, 2000);
+        });
+      }
+      res.cookie("refresh_token", new_refresh_token, { httpOnly: true }).json({
+        success: true,
+        error: false,
+        message: "Token uğurla yeniləndi.",
+        access_token,
+      });
+    } else {
       const { email } = jwt.decode(refresh_token);
       const user = await usersModel.findOne({
         where: {
@@ -214,28 +245,9 @@ async function refresh(req, res) {
         error: true,
         message: "Sistemə yenidən giriş etmək lazımdır.",
       });
-    } else {
-      const data = jwt.decode(refresh_token);
-      const { email, firstName, lastName } = data;
-      const payload = { firstName, lastName, email };
-      const access_token = jwt.sign(payload, access_token_secret, {
-        expiresIn: 1000 * 60,
-      });
-      const new_refresh_token = jwt.sign(payload, refresh_token_secret, {
-        expiresIn: 1000 * 60 * 60 * 24 * 365,
-      });
-      activeToken.refresh_token = new_refresh_token;
-      await activeToken.save();
-      res.cookie("refresh_token", new_refresh_token, { httpOnly: true }).json({
-        success: true,
-        error: false,
-        successMessage: "Token uğurla yeniləndi.",
-        errorMessage: "",
-        access_token,
-      });
     }
   } catch (error) {
-    // console.log(error);
+    console.log(error);
     res.clearCookie("refresh_token").json({
       success: false,
       error: true,

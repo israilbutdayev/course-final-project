@@ -107,24 +107,33 @@ async function remove(req, res) {
 }
 
 export async function search(req, res) {
-  const params = req.body;
-  if (params?.set) {
-    const filter = {};
-    Object.entries(params)
-      .filter(([key, value]) => value !== "" && key !== "set")
-      .forEach(([key, value]) => {
-        filter[key] = { [Op.substring]: value };
-      });
-    const products = await productsModel.findAll({
-      where: filter,
-    });
-    res.json(products);
-  } else {
-    const products = await productsModel.findAll({
-      where: { title: { [Op.substring]: params.title } },
-    });
-    res.json(products);
-  }
+  const initialState = {
+    title: "",
+    brand: "",
+    category: "",
+    minPrice: 0,
+    maxPrice: 999999,
+    minStock: 0,
+    maxStock: 999999,
+  };
+  const params = { ...initialState, ...req.body };
+  const filter = {
+    title: { [Op.substring]: params.title },
+    brand: { [Op.substring]: params.brand },
+    category: { [Op.substring]: params.category },
+    price: { [Op.between]: [params.minPrice, params.maxPrice] },
+    stock: { [Op.between]: [params.minStock, params.maxStock] },
+  };
+  const foundProducts = await productsModel.findAll({
+    where: filter,
+  });
+  const products = foundProducts.map((product) => {
+    const {
+      dataValues: { createdAt, updatedAt, userId, ...value },
+    } = product;
+    return value;
+  });
+  res.json(products);
 }
 
 export { get, add, remove };

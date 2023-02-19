@@ -9,15 +9,15 @@ import {
 
 const productsRouter = Router();
 
-productsRouter.get("/:id?", get);
-
 productsRouter.post("/search", search);
+
+productsRouter.get("/:id?", get);
 
 productsRouter.use(authMiddleware);
 
-productsRouter.delete("/:id", remove);
-
 productsRouter.post("/", get);
+
+productsRouter.delete("/:id", remove);
 
 productsRouter.post("/add", add);
 

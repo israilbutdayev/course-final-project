@@ -1,35 +1,26 @@
-import React, { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { getProductsThunk, searchProductsThunk } from "../../redux/store";
+import React from "react";
+import { useSelector } from "react-redux";
+import { useSearchQuery } from "../../redux/store";
 import Product from "../Product/Product";
 import { useState } from "react";
 import { useMemo } from "react";
 import { Pagination, Label, Select } from "flowbite-react";
-
 export default function Products() {
-  const dispatch = useDispatch();
-  const products = useSelector((state) => state.products);
   const search = useSelector((store) => store.search);
-  console.log(search);
-  useEffect(() => {
-    if (search.set) {
-      dispatch(searchProductsThunk(search));
-    } else {
-      dispatch(getProductsThunk());
-    }
-  }, [dispatch, search]);
+  const { isLoading: searchIsLoading, data: searchData = [] } =
+    useSearchQuery(search);
   const [count, setCount] = useState(9);
   const [page, setPage] = useState(1);
   const pages = useMemo(() => {
-    return Math.ceil(products?.products?.length / count);
-  }, [count, products?.products?.length]);
+    return Math.ceil(searchData?.length / count);
+  }, [count, searchData?.length]);
   const pageProducts = useMemo(() => {
     const startIndex = (page - 1) * count;
     const endIndex = startIndex + count;
-    return [...products?.products]
+    return [...searchData]
       .sort((a, b) => a.id - b.id)
       .slice(startIndex, endIndex);
-  }, [count, page, products]);
+  }, [count, page, searchData]);
   const countHandler = (e) => {
     const previous = count;
     const next = Number(e.target.value);
@@ -40,6 +31,9 @@ export default function Products() {
   const onPageChange = (e) => {
     setPage(e);
   };
+  if (searchIsLoading) return <div>Loading...</div>;
+  if (!searchData.length)
+    return <div>Axtarışınıza uyğun məhsul tapılmadı.</div>;
   return (
     <div>
       <div

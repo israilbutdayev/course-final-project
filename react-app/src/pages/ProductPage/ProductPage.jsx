@@ -18,7 +18,7 @@ export default function ProductPage() {
       <div className="flex flex-col gap-4 m-8">
         <div className="h-96 sm:h-96 xl:h-96 2xl:h-96">
           <Carousel slideInterval={5000}>
-            {product.imageUrls.map((url, index) => (
+            {product?.imageUrls?.map((url, index) => (
               <img key={index} src={url} alt="" />
             ))}
           </Carousel>
@@ -57,7 +57,7 @@ export default function ProductPage() {
           <div className="mb-2 block">
             <Label value="Məhsulun qiyməti" />
           </div>
-          <div>{product.price}</div>
+          <div>{product.price} $</div>
         </div>
         <div>
           <div className="mb-2 block">

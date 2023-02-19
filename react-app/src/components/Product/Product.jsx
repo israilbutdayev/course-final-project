@@ -5,16 +5,6 @@ import { Card } from "flowbite-react";
 export default function Product({ product }) {
   const navigate = useNavigate();
   return (
-    // <div
-    //   id="product"
-    //   onClick={(e) => {
-    //     navigate(`/product/${product.id}`);
-    //   }}
-    // >
-    //   <img id="thumbnail" src={product.thumbnailUrl} alt="" />
-    //   <p>{product.title}</p>
-    //   <p>{product.description}</p>
-    // </div>
     <React.Fragment>
       <div className="max-w-sm">
         <Card
@@ -24,10 +14,19 @@ export default function Product({ product }) {
           }}
         >
           <h5 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
-            {product.title}
+            Məhsulun adı: {product.title}
           </h5>
           <p className="font-normal text-gray-700 dark:text-gray-400">
-            {product.brand}
+            Məhsulun brendi: {product.brand}
+          </p>
+          <p className="font-normal text-gray-700 dark:text-gray-400">
+            Məhsulun kateqoriyası: {product.category}
+          </p>
+          <p className="font-normal text-gray-700 dark:text-gray-400">
+            Məhsulun qiyməti: {product.price} $
+          </p>
+          <p className="font-normal text-gray-700 dark:text-gray-400">
+            Məhsulun miqdarı: {product.stock}
           </p>
         </Card>
       </div>

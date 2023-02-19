@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { userSlice, useUpdateMutation, profileSlice } from "../../redux/store";
 import { Button, TextInput, Label, Alert } from "flowbite-react";
+import { useUpdateMutation } from "../../redux/store";
+import profileSlice from "../../redux/slices/profileSlice";
+import userSlice from "../../redux/slices/userSlice";
 export default function Profile() {
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");

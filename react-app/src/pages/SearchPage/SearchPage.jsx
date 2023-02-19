@@ -1,6 +1,6 @@
 import React from "react";
 import { Button, Label, TextInput } from "flowbite-react";
-import { searchSlice } from "../../redux/store";
+import searchSlice from "../../redux/slices/searchSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
@@ -41,6 +41,40 @@ export default function SearchPage() {
           onChange={changeHandler}
           value={search.category}
         />
+      </div>
+      <div>
+        <div className="mb-2 block">
+          <Label htmlFor="category" value="Qiymət aralığı" />
+        </div>
+        <div className="flex justify-start gap-2">
+          <TextInput
+            id="minPrice"
+            onChange={changeHandler}
+            value={search.minPrice}
+          />
+          <TextInput
+            id="maxPrice"
+            onChange={changeHandler}
+            value={search.maxPrice}
+          />
+        </div>
+      </div>
+      <div>
+        <div className="mb-2 block">
+          <Label htmlFor="category" value="Miqdar aralığı" />
+        </div>
+        <div className="flex justify-start gap-2">
+          <TextInput
+            id="minStock"
+            onChange={changeHandler}
+            value={search.minStock}
+          />
+          <TextInput
+            id="maxStock"
+            onChange={changeHandler}
+            value={search.maxStock}
+          />
+        </div>
       </div>
       <Button type="submit" onClick={onSearch}>
         Axtar

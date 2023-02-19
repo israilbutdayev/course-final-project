@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   Navbar,
@@ -11,21 +11,18 @@ import {
 } from "flowbite-react";
 import { Link, useNavigate } from "react-router-dom";
 import {
-  useLazyRefreshQuery,
-  useLazyInfoQuery,
-  userSlice,
-  registrationSlice,
-  loginSlice,
   useLoginMutation,
-  useLazyLogoutQuery,
-  searchProductsThunk,
-  searchSlice,
+  useInfoQuery,
+  useRefreshMutation,
+  useLogoutMutation,
 } from "../../redux/store";
+import loginSlice from "../../redux/slices/loginSlice";
+import searchSlice from "../../redux/slices/searchSlice";
 
 export default function NavBar() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const [search, setSearch] = useState();
+  const search = useSelector((state) => state.search);
   const errorModalRef = useRef(null);
   const { email, password } = useSelector((state) => state.login);
   const { isLogged, firstName, lastName, access_token } = useSelector(
@@ -34,10 +31,20 @@ export default function NavBar() {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorModalMessage, setErrorModalMessage] = useState("");
-  const [triggerRefresh] = useLazyRefreshQuery();
-  const [triggerInfo] = useLazyInfoQuery();
-  const [loginQuery] = useLoginMutation();
-  const [triggerLogout] = useLazyLogoutQuery();
+  const [triggerRefreshMutation] = useRefreshMutation();
+  const [triggerLoginMutation] = useLoginMutation();
+  const [triggerLogoutMutation] = useLogoutMutation();
+  useInfoQuery("info", { skip: !access_token });
+  useEffect(() => {
+    triggerRefreshMutation("refresh_token");
+    if (isLogged) {
+      const interval = setInterval(
+        () => triggerRefreshMutation("refresh_token"),
+        55000
+      );
+      return () => clearInterval(interval);
+    }
+  }, [triggerRefreshMutation, isLogged]);
 
   function changeHandler(e) {
     e.preventDefault();
@@ -46,92 +53,20 @@ export default function NavBar() {
   }
   const loginHandler = async (e) => {
     e.preventDefault();
-    console.log("login form");
-    const response = await loginQuery({ email, password });
-    const { success, error, message } = response.data;
+    const response = await triggerLoginMutation({ email, password });
+    const { success, error, message } = response?.data;
     if (success) {
-      const {
-        access_token,
-        user: { firstName, lastName, email },
-      } = response.data;
-      dispatch(
-        userSlice.actions.set({
-          initialLoad: false,
-          isLogged: true,
-          email,
-          firstName,
-          lastName,
-          access_token,
-        })
-      );
-      dispatch(loginSlice.actions.reset());
-      dispatch(registrationSlice.actions.reset());
-      navigate("/", { replace: true });
-      setShowLoginModal(false);
+      setShowErrorModal(false);
     } else if (error) {
       setErrorModalMessage(message);
       setShowErrorModal(true);
     }
   };
   const logoutHandler = (e) => {
-    // e.preventDefault();
-    triggerLogout(access_token)
-      .unwrap()
-      .then(() => {
-        dispatch(userSlice.actions.reset());
-        dispatch(
-          userSlice.actions.apply({
-            isLogged: false,
-          })
-        );
-        navigate("/", { replace: true });
-      });
+    triggerLogoutMutation();
+    navigate("/", { replace: true });
   };
-  const onSearch = (e) => {
-    e.preventDefault();
-    const data = { title: search };
-    dispatch(searchProductsThunk(data));
-  };
-  const init = useCallback(() => {
-    const run = async () => {
-      const resultRefresh = await triggerRefresh().unwrap();
-      if (resultRefresh.success) {
-        const { access_token: t_access_token } = resultRefresh;
-        const resultInfo = await triggerInfo(t_access_token).unwrap();
-        const {
-          user: { firstName, lastName, email },
-          access_token,
-        } = resultInfo;
-        if (access_token) {
-          dispatch(
-            userSlice.actions.set({
-              initialLoad: false,
-              isLogged: true,
-              firstName,
-              lastName,
-              email,
-              access_token,
-            })
-          );
-        }
-      } else {
-        dispatch(userSlice.actions.reset());
-        dispatch(
-          userSlice.actions.set({ initialLoad: false, isLogged: false })
-        );
-      }
-    };
-    run();
-  }, [dispatch, triggerInfo, triggerRefresh]);
-  useEffect(() => {
-    init();
-    const interval = setInterval(() => {
-      if (isLogged) {
-        init();
-      }
-    }, 55 * 1000);
-    return () => clearInterval(interval);
-  }, [init, isLogged]);
+
   return (
     <React.Fragment>
       <Navbar fluid={true} rounded={true}>
@@ -264,29 +199,29 @@ export default function NavBar() {
           </React.Fragment>
         </div>
         <Navbar.Collapse className="order-1 flex items-center">
-          <Link
-            onClick={() => dispatch(searchSlice.actions.apply({ set: false }))}
-            to="/"
-          >
-            Ana səhifə
-          </Link>
+          <Link to="/">Ana səhifə</Link>
           {isLogged && <Link to="/products">Mənim məhsullarım</Link>}
           <Link to="/search">Ətraflı axtarış</Link>
-          <form className="flex">
+          <div className="flex">
             <TextInput
               type="text"
               sizing="sm"
               placeholder="Axtarış"
               className=""
-              value={search}
+              value={search.title}
               onChange={(e) => {
-                setSearch(e.target.value);
+                dispatch(searchSlice.actions.apply({ title: e.target.value }));
               }}
             />
-            <button type="submit" className="mx-2" onClick={onSearch}>
-              Axtar
+            <button
+              className="mx-2"
+              onClick={() => {
+                dispatch(searchSlice.actions.reset());
+              }}
+            >
+              Axtarışı təmizlə
             </button>
-          </form>
+          </div>
         </Navbar.Collapse>
       </Navbar>
     </React.Fragment>
