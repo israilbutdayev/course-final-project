@@ -247,7 +247,7 @@ async function refresh(req, res) {
       });
     }
   } catch (error) {
-    console.log(error);
+    // console.log(error);
     res.clearCookie("refresh_token").json({
       success: false,
       error: true,

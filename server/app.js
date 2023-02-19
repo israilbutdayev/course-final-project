@@ -17,7 +17,7 @@ const port = 3000;
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 const __filename = url.fileURLToPath(import.meta.url);
 
-const client = path.join(path.dirname(__dirname), "client");
+export const client = path.join(path.dirname(__dirname), "client");
 
 const DEFAULT_ADMIN = {
   email: "israilbutdayev@gmail.com",
@@ -37,11 +37,10 @@ AdminJS.registerAdapter({
 });
 app.use(express.static(client));
 
-app.use(express.json());
+app.use(express.json({ limit: "50mb" }));
 app.use(cookieParser());
 
 const adminOptions = {
-  // We pass Category to `resources`
   resources: [productsModel, usersModel, tokensModel],
 };
 const admin = new AdminJS(adminOptions);

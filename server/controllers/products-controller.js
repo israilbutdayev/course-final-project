@@ -1,6 +1,19 @@
 import { Op } from "sequelize";
 import productsModel from "../models/products.js";
 import usersModel from "../models/users.js";
+import path from "path";
+import crypto from "crypto";
+import fs from "fs";
+import * as url from "url";
+import axios from "axios";
+import { buffer } from "node:stream/consumers";
+
+const __dirname = url.fileURLToPath(new URL("..", import.meta.url));
+const client = path.join(path.dirname(__dirname), "client");
+const imagesPath = path.join(client, "static", "images");
+if (!fs.existsSync(imagesPath)) {
+  fs.mkdirSync(imagesPath);
+}
 
 async function get(req, res) {
   if (req.method === "GET") {
@@ -41,9 +54,18 @@ async function add(req, res) {
       email,
     },
   });
+  const fileTypes = { png: "png", jpeg: "jpg" };
   const data = req.body;
-  const { imagesUrl } = data;
+  const { imagesUrl, thumbnail } = data;
+  const ext = thumbnail.match(/data\:image\/(png|jpeg)/)[1];
+  const fileType = fileTypes[ext];
+  const imageData = thumbnail.replace(/data\:image\/(png|jpeg);base64,/, "");
+  const imageHash = crypto.randomBytes(20).toString("hex");
+  const imageName = imageHash + "." + fileType;
+  const imageFile = path.join(imagesPath, imageName);
+  fs.writeFileSync(imageFile, imageData, "base64");
   const product = await productsModel.create({
+    thumbnailUrl: imageName,
     imagesUrl: JSON.stringify(imagesUrl),
     ...data,
     price: Number(data.price),

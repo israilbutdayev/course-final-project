@@ -8,7 +8,7 @@ export default function Product({ product }) {
     <React.Fragment>
       <div className="max-w-sm">
         <Card
-          imgSrc={product.thumbnailUrl}
+          imgSrc={"static/images/" + product.thumbnailUrl}
           onClick={(e) => {
             navigate(`/product/${product.id}`);
           }}

@@ -25,9 +25,13 @@ export default function NavBar() {
   const search = useSelector((state) => state.search);
   const errorModalRef = useRef(null);
   const { email, password } = useSelector((state) => state.login);
-  const { isLogged, firstName, lastName, access_token } = useSelector(
-    (state) => state.user
-  );
+  const {
+    isLogged,
+    firstName,
+    lastName,
+    email: userEmail,
+    access_token,
+  } = useSelector((state) => state.user);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorModalMessage, setErrorModalMessage] = useState("");
@@ -56,9 +60,11 @@ export default function NavBar() {
     const response = await triggerLoginMutation({ email, password });
     const { success, error, message } = response?.data;
     if (success) {
+      setShowLoginModal(false);
       setShowErrorModal(false);
     } else if (error) {
       setErrorModalMessage(message);
+      setShowLoginModal(false);
       setShowErrorModal(true);
     }
   };
@@ -156,7 +162,7 @@ export default function NavBar() {
                   </Link>
                 </span>
                 <span className="block truncate text-sm font-medium">
-                  {email}
+                  {userEmail}
                 </span>
               </Dropdown.Header>
               <Dropdown.Item className="order-8" onClick={logoutHandler}>
@@ -172,11 +178,12 @@ export default function NavBar() {
               popup={true}
               onClose={() => {
                 setShowErrorModal(false);
+                setShowLoginModal(true);
               }}
             >
               <Modal.Header />
               <Modal.Body>
-                <form ref={errorModalRef} onSubmit={() => {}}>
+                <form ref={errorModalRef}>
                   <div className="text-center">
                     <h3 className="mb-5 text-lg font-normal text-gray-500 dark:text-gray-400">
                       {errorModalMessage}
@@ -187,6 +194,8 @@ export default function NavBar() {
                         color="failure"
                         onClick={(e) => {
                           e.preventDefault();
+                          setShowErrorModal(false);
+                          setShowLoginModal(true);
                         }}
                       >
                         OK

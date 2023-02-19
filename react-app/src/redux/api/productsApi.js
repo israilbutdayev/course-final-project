@@ -2,7 +2,7 @@ import baseApi from "./baseApi";
 const productsApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     get: builder.query({
-      query: ({ id = "", method = "GET", access_token }) => {
+      query: ({ id = "", method = "GET" }) => {
         if (method === "GET")
           return {
             url: "/products/" + id,
@@ -12,23 +12,27 @@ const productsApi = baseApi.injectEndpoints({
           return {
             url: "/products",
             method: "POST",
-            headers: { Authorization: "Bearer " + access_token },
           };
         }
       },
+      providesTags: ["products"],
     }),
+
     add: builder.mutation({
-      query: ({ product, access_token }) => ({
+      query: ({ product }) => ({
         url: "/products/add",
         method: "POST",
         body: product,
       }),
+      invalidatesTags: ["products"],
     }),
+
     delete: builder.mutation({
-      query: ({ id, access_token }) => ({
+      query: ({ id }) => ({
         url: "/products/" + id,
         method: "DELETE",
       }),
+      invalidatesTags: ["products"],
     }),
     search: builder.query({
       query: (data) => ({

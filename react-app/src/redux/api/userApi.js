@@ -1,5 +1,7 @@
 import baseApi from "./baseApi";
 import userSlice from "../slices/userSlice";
+import loginSlice from "../slices/loginSlice";
+import registrationSlice from "../slices/registrationSlice";
 const userApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     info: builder.query({
@@ -22,7 +24,7 @@ const userApi = baseApi.injectEndpoints({
           };
           dispatch(userSlice.actions.set(payload));
         } else {
-          dispatch(userSlice.actions.set({ initialLoad: false }));
+          dispatch(userSlice.actions.reset());
         }
         return response;
       },
@@ -36,7 +38,7 @@ const userApi = baseApi.injectEndpoints({
           method: "POST",
           body: {},
         });
-        await sleep(200);
+        await sleep(50);
         const { data } = response;
         if (data?.success) {
           const payload = {
@@ -45,7 +47,6 @@ const userApi = baseApi.injectEndpoints({
           dispatch(userSlice.actions.apply(payload));
         } else if (data?.error && isLogged) {
           dispatch(userSlice.actions.reset());
-          dispatch(userSlice.actions.set({ initialLoad: false }));
         }
         return response;
       },
@@ -89,6 +90,8 @@ const userApi = baseApi.injectEndpoints({
         const { data } = response;
         if (data.success) {
           dispatch(userSlice.actions.reset());
+          dispatch(loginSlice.actions.reset());
+          dispatch(registrationSlice.actions.reset());
         }
         return response;
       },

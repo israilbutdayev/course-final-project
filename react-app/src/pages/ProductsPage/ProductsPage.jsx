@@ -5,15 +5,13 @@ import {
   useLazyGetQuery,
 } from "../../redux/store";
 import { Table, TextInput } from "flowbite-react";
-import { useSelector } from "react-redux";
 
 function Products() {
-  const { access_token } = useSelector((store) => store.user);
   const [deleter] = useDeleteMutation();
   const [getter, response] = useLazyGetQuery();
   const { isLoading, data } = response;
   const [product, setProduct] = useState({
-    thumbnailUrl: "",
+    thumbnail: "",
     title: "",
     brand: "",
     category: "",
@@ -23,11 +21,12 @@ function Products() {
     description: "",
   });
   useEffect(() => {
-    getter({
-      access_token,
-      method: "POST",
-    });
-  }, [getter, access_token]);
+    setTimeout(() => {
+      getter({
+        method: "POST",
+      });
+    }, 500);
+  }, [getter]);
   const [adder] = useAddMutation();
   const onChange = (e) => {
     const prop = e.target.id;
@@ -38,16 +37,11 @@ function Products() {
     }
   };
   const onAdd = () => {
-    adder({ product, access_token });
-    getter({
-      access_token,
-      method: "POST",
-    });
+    adder({ product });
   };
   const onDelete = (id) => {
-    deleter({ id, access_token });
+    deleter({ id });
     getter({
-      access_token,
       method: "POST",
     });
   };
@@ -76,7 +70,10 @@ function Products() {
                 className="bg-white dark:border-gray-700 dark:bg-gray-800"
               >
                 <Table.Cell>
-                  <img src={product.thumbnailUrl} alt={product.title} />
+                  <img
+                    src={"static/images/" + product.thumbnailUrl}
+                    alt={product.title}
+                  />
                 </Table.Cell>
                 <Table.Cell className="whitespace-nowrap font-medium text-gray-900 dark:text-white">
                   {product.title}
@@ -86,7 +83,7 @@ function Products() {
                 <Table.Cell>{product.color}</Table.Cell>
                 <Table.Cell>${product.price}</Table.Cell>
                 <Table.Cell>{product.stock}</Table.Cell>
-                <Table.Cell></Table.Cell>
+                <Table.Cell>{product.description}</Table.Cell>
                 <Table.Cell className="text-blue-700 underline underline-offset-2">
                   <button onClick={() => onDelete(product.id)}>
                     Məhsulu sil
@@ -98,11 +95,22 @@ function Products() {
 
           <Table.Row className="bg-white dark:border-gray-700 dark:bg-gray-800">
             <Table.Cell>
-              <TextInput
-                id="thumbnailUrl"
-                onChange={onChange}
-                value={product.thumbnailUrl}
-              ></TextInput>
+              <input
+                id="thumbnail"
+                className="block w-36 mb-0 text-xs text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
+                type="file"
+                accept="image/png, image/jpeg"
+                onChange={(e) => {
+                  const fileReader = new FileReader();
+                  fileReader.addEventListener("load", (event) => {
+                    setProduct((product) => ({
+                      ...product,
+                      thumbnail: event.target.result,
+                    }));
+                  });
+                  fileReader.readAsDataURL(e.target.files[0]);
+                }}
+              />
             </Table.Cell>
             <Table.Cell className="whitespace-nowrap font-medium text-gray-900 dark:text-white">
               <TextInput
