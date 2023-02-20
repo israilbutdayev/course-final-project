@@ -32,25 +32,23 @@ const userApi = baseApi.injectEndpoints({
     }),
     refresh: builder.query({
       queryFn: async (arg, { dispatch, getState }, extraOptions, baseQuery) => {
-        const isLogged = getState()?.user?.isLogged;
         const response = await baseQuery({
           url: "/user/refresh",
           method: "POST",
           body: {},
         });
-        await sleep(50);
         const { data } = response;
         if (data?.success) {
           const payload = {
             access_token: data?.access_token,
           };
           dispatch(userSlice.actions.apply(payload));
-        } else if (data?.error && isLogged) {
+        } else if (data?.error) {
           dispatch(userSlice.actions.reset());
         }
         return response;
       },
-      providesTags: ["info"],
+      providesTags: ["refresh"],
     }),
     registration: builder.mutation({
       queryFn: async (arg, { dispatch }, extraOptions, baseQuery) => {
@@ -65,7 +63,7 @@ const userApi = baseApi.injectEndpoints({
         }
         return response;
       },
-      invalidatesTags: ["info"],
+      invalidatesTags: ["refresh"],
     }),
     login: builder.mutation({
       queryFn: async (arg, { dispatch }, extraOptions, baseQuery) => {
@@ -80,7 +78,7 @@ const userApi = baseApi.injectEndpoints({
         }
         return response;
       },
-      invalidatesTags: ["info"],
+      invalidatesTags: ["refresh"],
     }),
     logout: builder.mutation({
       queryFn: async (arg, { dispatch }, extraOptions, baseQuery) => {
@@ -95,7 +93,7 @@ const userApi = baseApi.injectEndpoints({
         }
         return response;
       },
-      invalidatesTags: ["info"],
+      invalidatesTags: ["refresh"],
     }),
     update: builder.mutation({
       queryFn: async (arg, { dispatch }, extraOptions, baseQuery) => {
@@ -110,14 +108,9 @@ const userApi = baseApi.injectEndpoints({
         }
         return response;
       },
-      invalidatesTags: ["info"],
+      invalidatesTags: ["refresh"],
     }),
   }),
 });
 
 export default userApi;
-function sleep(ms) {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
-}

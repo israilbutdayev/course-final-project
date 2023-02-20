@@ -37,7 +37,7 @@ export default function NavBar() {
   const [errorModalMessage, setErrorModalMessage] = useState("");
 
   useRefreshQuery("refresh_query", {
-    pollingInterval: isLogged ? 5000 : undefined,
+    pollingInterval: isLogged ? 55000 : undefined,
   });
 
   useInfoQuery(access_token, { skip: !access_token });

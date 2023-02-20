@@ -5,8 +5,6 @@ import path from "path";
 import crypto from "crypto";
 import fs from "fs";
 import * as url from "url";
-import axios from "axios";
-import { buffer } from "node:stream/consumers";
 
 const __dirname = url.fileURLToPath(new URL("..", import.meta.url));
 const imagesPath = path.join(__dirname, "static", "images");
@@ -103,8 +101,9 @@ async function remove(req, res) {
       },
     });
     if (product.userId === user.id) {
+      const imagePath = product.thumbnailUrl;
+      fs.unlinkSync(path.join(imagesPath, imagePath));
       await product.destroy();
-      await productsModel.sync();
       res.json({
         success: true,
         error: false,
