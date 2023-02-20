@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   Navbar,
@@ -13,7 +13,7 @@ import { Link, useNavigate } from "react-router-dom";
 import {
   useLoginMutation,
   useInfoQuery,
-  useRefreshMutation,
+  useRefreshQuery,
   useLogoutMutation,
 } from "../../redux/store";
 import loginSlice from "../../redux/slices/loginSlice";
@@ -35,26 +35,22 @@ export default function NavBar() {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorModalMessage, setErrorModalMessage] = useState("");
-  const [triggerRefreshMutation] = useRefreshMutation();
+
+  useRefreshQuery("refresh_query", {
+    pollingInterval: isLogged ? 5000 : undefined,
+  });
+
+  useInfoQuery(access_token, { skip: !access_token });
+
   const [triggerLoginMutation] = useLoginMutation();
   const [triggerLogoutMutation] = useLogoutMutation();
-  useInfoQuery("info", { skip: !access_token });
-  useEffect(() => {
-    triggerRefreshMutation("refresh_token");
-    if (isLogged) {
-      const interval = setInterval(
-        () => triggerRefreshMutation("refresh_token"),
-        55000
-      );
-      return () => clearInterval(interval);
-    }
-  }, [triggerRefreshMutation, isLogged]);
 
   function changeHandler(e) {
     e.preventDefault();
     const prop = e.target.id;
     dispatch(loginSlice.actions.apply({ [prop]: e.target.value }));
   }
+
   const loginHandler = async (e) => {
     e.preventDefault();
     const response = await triggerLoginMutation({ email, password });

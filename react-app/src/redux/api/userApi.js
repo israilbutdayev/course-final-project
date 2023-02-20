@@ -30,7 +30,7 @@ const userApi = baseApi.injectEndpoints({
       },
       providesTags: ["info"],
     }),
-    refresh: builder.mutation({
+    refresh: builder.query({
       queryFn: async (arg, { dispatch, getState }, extraOptions, baseQuery) => {
         const isLogged = getState()?.user?.isLogged;
         const response = await baseQuery({
@@ -50,7 +50,7 @@ const userApi = baseApi.injectEndpoints({
         }
         return response;
       },
-      invalidatesTags: ["info"],
+      providesTags: ["info"],
     }),
     registration: builder.mutation({
       queryFn: async (arg, { dispatch }, extraOptions, baseQuery) => {

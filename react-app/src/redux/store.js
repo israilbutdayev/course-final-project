@@ -29,7 +29,7 @@ export const {
   useUpdateMutation,
   useLogoutMutation,
   useLoginMutation,
-  useRefreshMutation,
+  useRefreshQuery,
   useInfoQuery,
 } = userApi;
 
